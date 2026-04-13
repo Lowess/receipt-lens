@@ -1,0 +1,3 @@
+# Don't commit actual receipt PDFs (private data)
+receipts/
+.DS_Store

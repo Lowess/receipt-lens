@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReceiptLens — Grocery Receipt Analyser</title>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0f1117;--card:#1a1d27;--border:#2a2e3d;--text:#e4e6ef;--dim:#8b8fa3;
+  --accent:#6c63ff;--green:#34d399;--red:#f87171;--orange:#fb923c;--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+
+/* NAV */
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(15,17,23,0.92);backdrop-filter:blur(20px)}
+.navbar h1{font-size:1.3rem;font-weight:700;letter-spacing:-0.5px}
+.navbar h1 span{color:var(--accent)}
+.nav-actions{display:flex;gap:10px}
+
+.btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5a52e0;transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--accent);color:var(--text)}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:20px 32px 0}
+.tab{padding:10px 20px;border-radius:10px 10px 0 0;cursor:pointer;font-size:.9rem;font-weight:500;color:var(--dim);background:transparent;border:1px solid transparent;border-bottom:none;transition:all .2s}
+.tab:hover{color:var(--text);background:var(--card)}
+.tab.active{color:var(--accent);background:var(--card);border-color:var(--border);border-bottom-color:var(--card)}
+
+/* LAYOUT */
+.container{padding:0 32px 40px;max-width:1400px;margin:0 auto}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-top:20px}
+.panel-title{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:16px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.container{padding:0 16px 40px}.navbar{padding:16px}.tabs{padding:16px 16px 0}}
+
+/* STATS */
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.stat-label{font-size:.78rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:2rem;font-weight:700;margin-top:4px}
+.stat-sub{font-size:.82rem;color:var(--dim);margin-top:4px}
+.stat-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600}
+.badge-up{background:rgba(248,113,113,.15);color:var(--red)}
+.badge-down{background:rgba(52,211,153,.15);color:var(--green)}
+
+/* CHARTS */
+.chart-wrap{position:relative;width:100%;max-width:320px;margin:0 auto}
+.chart-center-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.chart-center-label .amount{font-size:1.6rem;font-weight:700}
+.chart-center-label .sublabel{font-size:.75rem;color:var(--dim)}
+.trend-chart-wrap{position:relative;height:350px}
+
+/* PILLS */
+.receipt-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.receipt-pill{padding:8px 16px;border-radius:20px;cursor:pointer;font-size:.82rem;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--dim);transition:all .2s}
+.receipt-pill:hover{border-color:var(--accent);color:var(--text)}
+.receipt-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.receipt-delete{background:none;border:none;color:var(--dim);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:.8rem;margin-left:6px;transition:all .2s}
+.receipt-delete:hover{color:var(--red);background:rgba(248,113,113,.1)}
+
+/* TABLE */
+.items-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.items-table th{text-align:left;padding:10px 12px;color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.items-table td{padding:8px 12px;border-bottom:1px solid rgba(42,46,61,.5)}
+.items-table tr:hover td{background:rgba(108,99,255,.05)}
+.cat-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+
+/* LEGEND */
+.legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:16px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.82rem;padding:6px 10px;border-radius:8px;transition:background .2s}
+.legend-item:hover{background:rgba(255,255,255,.03)}
+.legend-color{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+.legend-label{color:var(--dim);flex:1}
+.legend-value{font-weight:600}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:48px;text-align:center;cursor:pointer;transition:all .3s;margin-top:20px}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(108,99,255,.05)}
+.upload-zone svg{width:48px;height:48px;color:var(--dim);margin-bottom:12px}
+.upload-zone p{color:var(--dim);font-size:.9rem}
+.upload-zone .hint{font-size:.78rem;color:var(--dim);margin-top:8px;opacity:.6}
+#file-input{display:none}
+
+/* PROGRESS */
+.ocr-progress{margin-top:20px;display:none}
+.ocr-progress.active{display:block}
+.progress-bar-bg{width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s;width:0}
+.progress-text{font-size:.82rem;color:var(--dim);margin-top:8px;text-align:center}
+
+.hidden{display:none!important}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease-out}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* FILTER CHIPS (reusable) */
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filter-chip{padding:5px 12px;border-radius:16px;cursor:pointer;font-size:.78rem;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--dim);transition:all .2s;user-select:none}
+.filter-chip:hover{border-color:var(--accent);color:var(--text)}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-chip.excluded{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3);text-decoration:line-through}
+
+/* EXPAND/COLLAPSE */
+.expand-btn{background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:500;transition:all .2s;margin-top:8px}
+.expand-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* ALCOHOL CARD */
+.alcohol-card{background:linear-gradient(135deg,rgba(251,146,60,.08),rgba(248,113,113,.08));border:1px solid rgba(251,146,60,.25);border-radius:var(--radius);padding:20px;transition:all .2s}
+.alcohol-card:hover{border-color:var(--orange)}
+.alcohol-highlight{color:var(--orange);font-weight:700}
+
+/* FOOD-ONLY TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:12px;margin-top:20px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toggle-label{font-size:.85rem;color:var(--dim);flex:1}
+.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.3s}
+.toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--green)}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+/* ITEMS LIST (scrollable) */
+.items-scroll{max-height:420px;overflow-y:auto}
+.items-scroll.expanded{max-height:none}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <h1>🧾 Receipt<span>Lens</span></h1>
+  <div class="nav-actions">
+    <button class="btn btn-outline" onclick="exportData()">📥 Export JSON</button>
+    <button class="btn btn-primary" id="add-btn" onclick="document.getElementById('file-input').click()">➕ Add Receipt</button>
+    <input type="file" id="file-input" accept=".pdf" multiple onchange="handleFiles(this.files)">
+  </div>
+</nav>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" data-tab="detail" onclick="switchTab('detail')">Receipt Detail</div>
+    <div class="tab" data-tab="trends" onclick="switchTab('trends')">Trends</div>
+    <div class="tab" data-tab="items" onclick="switchTab('items')">All Items</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="tab-overview" class="tab-content fade-in">
+    <div class="toggle-row" style="margin-top:20px">
+      <span class="toggle-label">🥗 <strong>Food Only</strong> — exclude Hygiène & Maison from totals and charts</span>
+      <label class="toggle-switch"><input type="checkbox" id="food-only-toggle" onchange="renderAll()"><span class="toggle-slider"></span></label>
+    </div>
+    <div id="stat-cards" style="margin-top:12px"></div>
+    <div class="grid-2" style="margin-top:20px">
+      <div class="panel">
+        <div class="panel-title">Spending by Category (All Receipts)</div>
+        <div class="chart-wrap"><canvas id="donut-total"></canvas>
+          <div class="chart-center-label"><div class="amount" id="total-amount">0€</div><div class="sublabel">Total Spent</div></div>
+        </div>
+        <div class="legend-grid" id="legend-total"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Category Breakdown per Receipt</div>
+        <div class="trend-chart-wrap"><canvas id="bar-stacked"></canvas></div>
+      </div>
+    </div>
+    <div class="upload-zone" id="upload-zone"
+      ondragover="event.preventDefault();this.classList.add('dragover')"
+      ondragleave="this.classList.remove('dragover')"
+      ondrop="event.preventDefault();this.classList.remove('dragover');handleFiles(event.dataTransfer.files)"
+      onclick="document.getElementById('file-input').click()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.182 3.57A4.5 4.5 0 0118 19.5H6.75z"/>
+      </svg>
+      <p>Drop Leclerc receipt PDFs here or click to upload</p>
+      <div class="hint">Scanned receipt images are OCR'd automatically in your browser — nothing leaves your machine</div>
+    </div>
+    <div class="ocr-progress" id="ocr-progress">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">Initialising OCR...</div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="tab-detail" class="tab-content hidden fade-in">
+    <div class="panel">
+      <div class="panel-title">Select Receipt</div>
+      <div class="receipt-pills" id="receipt-pills-detail"></div>
+    </div>
+    <div class="grid-2" style="margin-top:20px">
+      <div class="panel">
+        <div class="panel-title">Category Breakdown</div>
+        <div class="chart-wrap"><canvas id="donut-detail"></canvas>
+          <div class="chart-center-label"><div class="amount" id="detail-amount">0€</div><div class="sublabel" id="detail-sublabel">-</div></div>
+        </div>
+        <div class="legend-grid" id="legend-detail"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" id="top-items-title">Top Items by Price</div>
+        <div class="filter-chips" id="detail-cat-chips"></div>
+        <div class="items-scroll" id="top-items-scroll">
+          <div class="trend-chart-wrap"><canvas id="bar-top-items"></canvas></div>
+        </div>
+        <button class="expand-btn" id="expand-top-items" onclick="toggleExpandTopItems()">Show all items ▼</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRENDS -->
+  <div id="tab-trends" class="tab-content hidden fade-in">
+    <div class="panel">
+      <div class="panel-title">Spending Trend by Category</div>
+      <div class="trend-chart-wrap" style="height:400px"><canvas id="line-trends"></canvas></div>
+    </div>
+    <div class="grid-2" style="margin-top:20px">
+      <div class="panel">
+        <div class="panel-title">Category Change (Latest vs Previous)</div>
+        <div class="trend-chart-wrap"><canvas id="bar-change"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Spending Evolution</div>
+        <div class="trend-chart-wrap"><canvas id="bar-evolution"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <div id="tab-items" class="tab-content hidden fade-in">
+    <div class="panel">
+      <div class="panel-title">Select Receipt</div>
+      <div class="receipt-pills" id="receipt-pills-items"></div>
+      <div style="margin-top:12px">
+        <input type="text" id="item-search" placeholder="Fuzzy search items or categories... (e.g. 'bby' matches Bébé, 'frm' matches fromage)"
+          style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;outline:none"
+          oninput="renderItemsTable()">
+      </div>
+      <div class="filter-chips" id="items-cat-chips" style="margin-top:10px"></div>
+    </div>
+    <div class="panel" style="margin-top:10px;overflow-x:auto">
+      <div id="items-summary" style="font-size:.82rem;color:var(--dim);margin-bottom:12px"></div>
+      <table class="items-table"><thead><tr><th>Item</th><th>Category</th><th style="text-align:right">Price (€)</th></tr></thead>
+      <tbody id="items-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==============================================================
+// CATEGORIES
+// ==============================================================
+const CATEGORIES = {
+  'Bébé':              { color:'#f472b6', icon:'🍼', keywords:['babybio','boudoir','blediscuit','bonne nuit','assiette carotte','assiette patate douce','bol leg','ass legume','legumes vt riz babybio','legumes vt dinde','haricots vt dinde babybio','pt legumes agneau','pt legumes saumon','pt plat plet','pt plat legumes saumon','navet pt ps canard','gourde brasse','grde pom','grde panache'] },
+  'Fruits & Légumes':  { color:'#34d399', icon:'🥦', section:'FRUIT ET LEGUMES' },
+  'Viande':            { color:'#f87171', icon:'🥩', section:'BOUCHERIE' },
+  'Volailles':         { color:'#fb923c', icon:'🍗', section:'VOLAILLES' },
+  'Charcuterie':       { color:'#c084fc', icon:'🥓', section:'CHARCUTERIE' },
+  'Poissonnerie':      { color:'#38bdf8', icon:'🐟', section:'POISSONNERIE' },
+  'Crémerie':          { color:'#fbbf24', icon:'🧀', section:'CREMERIE' },
+  'Épicerie':          { color:'#a78bfa', icon:'🥫', section:'EPICERIE' },
+  'Boissons':          { color:'#2dd4bf', icon:'🥤', section:'LIQUIDE' },
+  'Alcool':            { color:'#e11d48', icon:'🍷', keywords:['biere','beer','ipa','blonde','triple','prestige','bush','anosteke','brewdog','feuillien','page 24','hildegarde','tandem','mouillee','mionetto','prosecco','champagne','vin ','wine','cidre','whisky','vodka','rhum','pastis','aperol','ricard'] },
+  'Hygiène & Maison':  { color:'#94a3b8', icon:'🧹', section:'DPH' },
+};
+const CATEGORY_ORDER = Object.keys(CATEGORIES);
+const FOOD_CATEGORIES = CATEGORY_ORDER.filter(c => c !== 'Hygiène & Maison');
+
+// Alcohol keywords for sub-categorization within Boissons
+const ALCOHOL_KW = CATEGORIES['Alcool'].keywords;
+
+function categorize(name, section) {
+  const lower = name.toLowerCase();
+  // Baby items first
+  for (const kw of CATEGORIES['Bébé'].keywords) {
+    if (lower.includes(kw)) return 'Bébé';
+  }
+  // Alcohol detection (within Boissons/LIQUIDE section or by keyword)
+  for (const kw of ALCOHOL_KW) {
+    if (lower.includes(kw)) return 'Alcool';
+  }
+  // Section-based
+  for (const [cat, conf] of Object.entries(CATEGORIES)) {
+    if (conf.section && conf.section === section) return cat;
+  }
+  return 'Épicerie';
+}
+
+// Is the item alcoholic? (for items already categorized)
+function isAlcohol(item) { return item.category === 'Alcool'; }
+
+// ==============================================================
+// STATE
+// ==============================================================
+let receipts = [];
+let selectedReceiptIdx = 0;
+let charts = {};
+let ocrWorker = null;
+let detailCategoryFilter = null; // null = all, or a category name
+let topItemsExpanded = false;
+let itemsCategoryFilter = null; // null = all for items tab
+
+// ==============================================================
+// FUZZY SEARCH
+// ==============================================================
+function fuzzyMatch(text, query) {
+  if (!query) return true;
+  text = text.toLowerCase();
+  query = query.toLowerCase();
+  // Exact substring match first
+  if (text.includes(query)) return true;
+  // Fuzzy: all query chars must appear in order
+  let qi = 0;
+  for (let ti = 0; ti < text.length && qi < query.length; ti++) {
+    if (text[ti] === query[qi]) qi++;
+  }
+  return qi === query.length;
+}
+
+function fuzzyScore(text, query) {
+  if (!query) return 0;
+  text = text.toLowerCase();
+  query = query.toLowerCase();
+  // Exact match = best score
+  if (text === query) return 100;
+  // Starts with
+  if (text.startsWith(query)) return 90;
+  // Contains exact substring
+  const idx = text.indexOf(query);
+  if (idx >= 0) return 80 - idx;
+  // Fuzzy match score: bonus for consecutive matches and early matches
+  let qi = 0, score = 0, consecutive = 0;
+  for (let ti = 0; ti < text.length && qi < query.length; ti++) {
+    if (text[ti] === query[qi]) {
+      qi++;
+      consecutive++;
+      score += consecutive * 2 + (ti < 5 ? 5 : 0);
+    } else {
+      consecutive = 0;
+    }
+  }
+  return qi === query.length ? score : -1;
+}
+
+// ==============================================================
+// OCR  — Tesseract.js in-browser
+// ==============================================================
+async function getOCRWorker() {
+  if (ocrWorker) return ocrWorker;
+  const w = await Tesseract.createWorker('eng', 1, {
+    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0',
+    logger: m => {
+      if (m.status === 'recognizing text') {
+        const pct = Math.round(m.progress * 100);
+        document.getElementById('progress-fill').style.width = pct + '%';
+      }
+    }
+  });
+  await w.setParameters({ tessedit_pageseg_mode: '6' }); // PSM 6 = single uniform block
+  ocrWorker = w;
+  return w;
+}
+
+// Render a PDF page to a canvas and return as image data
+async function pdfPageToImage(page) {
+  const scale = 2; // good balance speed vs quality
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  return canvas;
+}
+
+function showProgress(pct, text) {
+  const el = document.getElementById('ocr-progress');
+  el.classList.add('active');
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = text;
+}
+function hideProgress() {
+  document.getElementById('ocr-progress').classList.remove('active');
+}
+
+async function ocrPDF(arrayBuffer) {
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const numPages = pdf.numPages;
+  const worker = await getOCRWorker();
+  let fullText = '';
+
+  for (let i = 1; i <= numPages; i++) {
+    showProgress(Math.round((i - 1) / numPages * 100),
+      `OCR page ${i}/${numPages}...`);
+    const page = await pdf.getPage(i);
+    const canvas = await pdfPageToImage(page);
+    const { data: { text } } = await worker.recognize(canvas);
+    fullText += text + '\n';
+  }
+  showProgress(100, 'Parsing receipt...');
+  return fullText;
+}
+
+// ==============================================================
+// RECEIPT PARSER  (tuned against real Tesseract PSM-6 output)
+// ==============================================================
+function parseReceiptText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // ---- Extract date ----
+  let date = null, dateLabel = '';
+  for (const line of lines) {
+    const m1 = line.match(/(\d{1,2})\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)\s+(\d{4})/i);
+    if (m1) {
+      const months = {janvier:0,fevrier:1,'février':1,mars:2,avril:3,mai:4,juin:5,juillet:6,aout:7,'août':7,septembre:8,octobre:9,novembre:10,decembre:11,'décembre':11};
+      date = new Date(parseInt(m1[3]), months[m1[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')] ?? 0, parseInt(m1[1]));
+      const mNames = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+      dateLabel = `${m1[1]} ${mNames[date.getMonth()]} ${m1[3]}`;
+      break;
+    }
+    const m2 = line.match(/^(\d{2})\/(\d{2})\/(\d{2})\b/);
+    if (m2 && !date) {
+      date = new Date(2000 + parseInt(m2[3]), parseInt(m2[2]) - 1, parseInt(m2[1]));
+      const mNames = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+      dateLabel = `${m2[1]} ${mNames[date.getMonth()]} 20${m2[3]}`;
+    }
+  }
+
+  // ---- Parse items ----
+  let currentSection = 'EPICERIE';
+  const items = [];
+  const seen = new Set(); // dedup garbled cross-page repeats
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Stop at total
+    if (/^Total\s+\d+\s+articles/i.test(line)) break;
+
+    // Section header
+    const secMatch = line.match(/^>>\s*(.+)/);
+    if (secMatch) { currentSection = secMatch[1].trim(); continue; }
+
+    // Skip metadata / non-item lines
+    if (/^(Caisse|Bon immediat|Reste|CB\s|Code\s|LECLERC|de\s+\d|fermeture|TTC\s|CARTE|CIC|DEBIT|MONTANT|9{2}\d{10}|BONS DE|VINAIGRE BALSA.*1\.\d{2}$|LOT VOLVIC|2E\s|CONCOMBRE.*Lot|PAGE 24.*Lot|Total Bon|Avec la|TROPICANA.*euros|Vous venez|CUMUL|Ce CUMUL|Modalit|En \d{4}|grace|Merci|Vos vignettes|Solde|Exclusiv|PHOTO E|30%|sur L|avec le code|\*Offre|inclus|le logiciel|E\.Leclerc|impression|postaux|autre promotion|Généré|Ticket \d|contact|salouel|BRAVO|VOUS AVEZ|Rendez|application|pour faire|Super Jeu|découvrir|Votre acc|minutes|Jeu du|\*{4}|^\d{2}\s+\d{2}\s+\d{2}|^[A-Z]\d{5}|XXXXX|9B9E|No AUTO|\.{3})/i.test(line)) continue;
+    if (/^[\d\s%]+$/.test(line)) continue; // e.g. "1 5%50"
+    if (/^(Réagir|Parlez|anonyme|www\.|03\d{8}|L'échange|tout produit|d'origine|votre E|a l'accueil|Hors produits|sous-v)/i.test(line)) continue;
+
+    // Item with price on same line:
+    //   "BISCUIT 168G MULTICEREALES CHOC 2.66 1"
+    //   "2 X 2.78€ 5.56 1"  (multiplier line with total price)
+    //   Handle OCR noise: @->0, garbled prices like "231", "5s63:", "2.701.", "La77"
+
+    // Multiplier+price line: "2 X 2.78€ 5.56 1" or "2X 1.17€ 2.34 1" or garbled "2 -X '3015€ 6.30 5"
+    const multMatch = line.match(/^(\d+)\s*[-—]?\s*X\s*['\d.,]+€?\s+([\d.,@]+)\s+\d/i);
+    if (multMatch) {
+      const price = cleanPrice(multMatch[2]);
+      if (price > 0 && i > 0) {
+        // Find the item name — look back for the most recent name-only line
+        for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+          const prev = lines[j].trim();
+          if (/^>>\s/.test(prev)) break;
+          if (/^\d+\s*X\s/i.test(prev)) continue;
+          // This should be the item name (possibly with a garbled tail)
+          const nameOnly = prev.replace(/\s+[\d.,@]+\s+\d\s*$/, '').replace(/^\*\s*/, '').trim();
+          if (nameOnly.length > 2 && !/^(Caisse|Bon |Reste|Total)/i.test(nameOnly)) {
+            const key = nameOnly.substring(0, 20) + '|' + price;
+            if (!seen.has(key)) {
+              seen.add(key);
+              items.push({ name: nameOnly, price, section: currentSection, category: categorize(nameOnly, currentSection) });
+            }
+            break;
+          }
+        }
+      }
+      continue;
+    }
+
+    // Standalone multiplier without price on same line (skip)
+    if (/^\d+\s*X\s*[\d.,]+€?\s*$/i.test(line)) continue;
+
+    // Regular item line: "HARICOTS BEURRE EXTRA-FINS 4.80 1"
+    // Also handles OCR-garbled prices like "La77" (=1.77), "5s63:" (=5.63), "2.701." (=2.71)
+    const itemMatch = line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]+[.;:']?)\s+\d\s*$/);
+    if (itemMatch) {
+      const name = itemMatch[2].replace(/^\*\s*/, '').trim();
+      const price = cleanPrice(itemMatch[3]);
+      // Skip if name looks garbled (too many non-alpha chars)
+      const alphaRatio = (name.match(/[A-Za-zÀ-ÿ]/g) || []).length / name.length;
+      if (price > 0 && name.length > 2 && alphaRatio > 0.4) {
+        const key = name.substring(0, 20) + '|' + price;
+        if (!seen.has(key)) {
+          seen.add(key);
+          items.push({ name, price, section: currentSection, category: categorize(name, currentSection) });
+        }
+      }
+      continue;
+    }
+  }
+
+  // Total
+  let total = 0;
+  const totalMatch = text.match(/Total\s+\d+\s+articles\s+([\d.,]+)/);
+  if (totalMatch) total = parseFloat(totalMatch[1].replace(',', '.'));
+  else total = items.reduce((s, it) => s + it.price, 0);
+
+  return { date, dateLabel: dateLabel || 'Unknown', label: dateLabel || 'Unknown', total, items };
+}
+
+function cleanPrice(raw) {
+  // Handle OCR artifacts: @ -> 0, remove trailing dots/commas/colons, fix common misreads
+  let s = raw.replace(/@/g, '0').replace(/,/g, '.').replace(/[;:'"]+$/g, '').replace(/[;:'"]+/g, '.');
+  // Common OCR letter→digit substitutions at start: L/l→1, Z/z→2, O/o→0
+  s = s.replace(/^[Ll]/, '1').replace(/^[Zz]/, '2').replace(/^[Oo]/, '0');
+  // Mid-string: o→0, s between digits likely a decimal point
+  s = s.replace(/([0-9])[sS]([0-9])/g, '$1.$2');
+  s = s.replace(/[Oo]/g, '0');
+  // Remove any remaining non-numeric chars except dots
+  s = s.replace(/[^0-9.]/g, '');
+  // Remove trailing dots
+  s = s.replace(/\.+$/, '');
+  // Handle cases like "2701" -> remove middle dots if too many
+  const dots = s.split('.').length - 1;
+  if (dots > 1) { const parts = s.split('.'); s = parts.slice(0,-1).join('') + '.' + parts[parts.length-1]; }
+  // If no decimal point and length >= 3, insert one before last 2 digits
+  if (!s.includes('.') && s.length >= 3 && /^\d+$/.test(s)) {
+    s = s.slice(0, -2) + '.' + s.slice(-2);
+  }
+  const val = parseFloat(s);
+  return isNaN(val) ? 0 : Math.round(val * 100) / 100;
+}
+
+// ==============================================================
+// FILE HANDLING
+// ==============================================================
+async function handleFiles(fileList) {
+  const files = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.endsWith('.pdf'));
+  if (files.length === 0) return;
+
+  document.getElementById('add-btn').disabled = true;
+  document.getElementById('add-btn').textContent = '⏳ Processing...';
+
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    showProgress(0, `Processing ${file.name} (${fi + 1}/${files.length})...`);
+    try {
+      const ab = await file.arrayBuffer();
+      const text = await ocrPDF(ab);
+      const receipt = parseReceiptText(text);
+      receipt.filename = file.name;
+
+      // Check for duplicates
+      const dup = receipts.find(r => r.label === receipt.label && Math.abs(r.total - receipt.total) < 2);
+      if (!dup && receipt.items.length > 0) {
+        receipts.push(receipt);
+        receipts.sort((a, b) => (a.date || 0) - (b.date || 0));
+        saveState();
+      }
+    } catch (e) {
+      console.error('Failed to process', file.name, e);
+    }
+  }
+
+  hideProgress();
+  document.getElementById('add-btn').disabled = false;
+  document.getElementById('add-btn').textContent = '➕ Add Receipt';
+  document.getElementById('file-input').value = '';
+  renderAll();
+}
+
+// ==============================================================
+// PERSISTENCE
+// ==============================================================
+function saveState() {
+  try {
+    localStorage.setItem('receiptlens_v2', JSON.stringify(receipts.map(r => ({ ...r, date: r.date?.toISOString() || null }))));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem('receiptlens_v2');
+    if (raw) { receipts = JSON.parse(raw).map(r => ({ ...r, date: r.date ? new Date(r.date) : null })); }
+  } catch(e) {}
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(receipts, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'receipt-data.json'; a.click();
+}
+
+// ==============================================================
+// AGGREGATION
+// ==============================================================
+function getCategoryTotals(items) {
+  const t = {}; for (const c of CATEGORY_ORDER) t[c] = 0;
+  for (const it of items) t[it.category] = (t[it.category] || 0) + it.price;
+  return t;
+}
+function activeCats(t) { return CATEGORY_ORDER.filter(c => t[c] > 0.01); }
+
+// ==============================================================
+// CHART HELPERS
+// ==============================================================
+const CHART_TOOLTIP = { backgroundColor:'#1a1d27', borderColor:'#2a2e3d', borderWidth:1, titleColor:'#e4e6ef', bodyColor:'#8b8fa3', padding:12, cornerRadius:8 };
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderDonut(canvasId, totals, centerId) {
+  destroyChart(canvasId);
+  const cats = activeCats(totals);
+  const total = cats.reduce((s, c) => s + totals[c], 0);
+  if (centerId) document.getElementById(centerId).textContent = total.toFixed(2) + '€';
+  charts[canvasId] = new Chart(document.getElementById(canvasId), {
+    type:'doughnut',
+    data: { labels: cats.map(c => CATEGORIES[c].icon+' '+c), datasets: [{ data: cats.map(c => +totals[c].toFixed(2)), backgroundColor: cats.map(c => CATEGORIES[c].color), borderWidth:0, hoverOffset:8 }] },
+    options: { cutout:'68%', responsive:true, maintainAspectRatio:true, plugins: { legend:{display:false}, tooltip: { ...CHART_TOOLTIP, callbacks: { label: ctx => { const pct = ((ctx.parsed/total)*100).toFixed(1); return ` ${ctx.parsed.toFixed(2)}€ (${pct}%)`; } } } } }
+  });
+}
+
+function renderLegend(id, totals) {
+  const cats = activeCats(totals); const total = cats.reduce((s,c) => s+totals[c], 0);
+  document.getElementById(id).innerHTML = cats.map(c => {
+    const pct = ((totals[c]/total)*100).toFixed(1);
+    return `<div class="legend-item"><div class="legend-color" style="background:${CATEGORIES[c].color}"></div><span class="legend-label">${CATEGORIES[c].icon} ${c}</span><span class="legend-value">${totals[c].toFixed(2)}€ <span style="color:var(--dim);font-weight:400;font-size:.75rem">${pct}%</span></span></div>`;
+  }).join('');
+}
+
+function renderBarStacked() {
+  destroyChart('bar-stacked'); if (!receipts.length) return;
+  const catsToShow = isFoodOnly() ? FOOD_CATEGORIES : CATEGORY_ORDER;
+  const ds = catsToShow.filter(c => receipts.some(r => getCategoryTotals(getFilteredItems(r.items))[c]>0.01)).map(c => ({
+    label:c, data: receipts.map(r => +(getCategoryTotals(getFilteredItems(r.items))[c]||0).toFixed(2)), backgroundColor:CATEGORIES[c].color, borderRadius:4
+  }));
+  charts['bar-stacked'] = new Chart(document.getElementById('bar-stacked'), {
+    type:'bar', data:{ labels:receipts.map(r=>r.label), datasets:ds },
+    options:{ responsive:true,maintainAspectRatio:false, scales:{ x:{stacked:true,grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3'}}, y:{stacked:true,grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3',callback:v=>v+'€'}} }, plugins:{ legend:{position:'bottom',labels:{color:'#8b8fa3',boxWidth:12,padding:12,font:{size:11}}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}€`}} } }
+  });
+}
+
+function renderDetailCategoryChips(r) {
+  if (!r) return;
+  const cats = getCategoryTotals(r.items);
+  const active = activeCats(cats);
+  const el = document.getElementById('detail-cat-chips');
+  el.innerHTML = `<div class="filter-chip ${detailCategoryFilter===null?'active':''}" onclick="detailCategoryFilter=null;renderDetailPanel()">All</div>` +
+    active.map(c => `<div class="filter-chip ${detailCategoryFilter===c?'active':''}" onclick="detailCategoryFilter='${c}';topItemsExpanded=false;renderDetailPanel()">${CATEGORIES[c].icon} ${c} <span style="opacity:.6">${cats[c].toFixed(0)}€</span></div>`).join('');
+}
+
+function renderBarTopItems(r) {
+  destroyChart('bar-top-items'); if(!r)return;
+  let items = [...r.items];
+  if (detailCategoryFilter) items = items.filter(i => i.category === detailCategoryFilter);
+  items.sort((a,b) => b.price - a.price);
+  const limit = topItemsExpanded ? items.length : 10;
+  const sorted = items.slice(0, limit);
+
+  const titleEl = document.getElementById('top-items-title');
+  titleEl.textContent = detailCategoryFilter
+    ? `${CATEGORIES[detailCategoryFilter]?.icon||''} ${detailCategoryFilter} — ${items.length} items (${items.reduce((s,i)=>s+i.price,0).toFixed(2)}€)`
+    : `Top Items by Price`;
+
+  const expandBtn = document.getElementById('expand-top-items');
+  expandBtn.style.display = items.length > 10 ? '' : 'none';
+  expandBtn.textContent = topItemsExpanded ? `Show top 10 only ▲` : `Show all ${items.length} items ▼`;
+
+  // Adjust chart height for expanded view
+  const chartWrap = document.querySelector('#bar-top-items').parentElement;
+  chartWrap.style.height = topItemsExpanded ? Math.max(350, sorted.length * 28) + 'px' : '350px';
+
+  charts['bar-top-items'] = new Chart(document.getElementById('bar-top-items'), {
+    type:'bar', data:{ labels:sorted.map(i=>i.name.substring(0,30)), datasets:[{data:sorted.map(i=>i.price),backgroundColor:sorted.map(i=>CATEGORIES[i.category]?.color||'#6c63ff'),borderRadius:4}] },
+    options:{ indexAxis:'y',responsive:true,maintainAspectRatio:false, scales:{ x:{grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3',callback:v=>v+'€'}}, y:{grid:{display:false},ticks:{color:'#8b8fa3',font:{size:10}}} }, plugins:{ legend:{display:false}, tooltip:{...CHART_TOOLTIP, callbacks:{label:ctx=>` ${ctx.parsed.x.toFixed(2)}€ — ${sorted[ctx.dataIndex].category}`}} } }
+  });
+}
+
+function toggleExpandTopItems() {
+  topItemsExpanded = !topItemsExpanded;
+  if (receipts.length) renderBarTopItems(receipts[selectedReceiptIdx]);
+}
+
+function renderDetailPanel() {
+  if (!receipts.length) return;
+  const r = receipts[selectedReceiptIdx];
+  renderDetailCategoryChips(r);
+  renderBarTopItems(r);
+}
+
+function renderLineTrends() {
+  destroyChart('line-trends'); if(!receipts.length)return;
+  const ac = CATEGORY_ORDER.filter(c=>receipts.some(r=>getCategoryTotals(r.items)[c]>0.01));
+  const ds = ac.map(c=>({
+    label:CATEGORIES[c].icon+' '+c, data:receipts.map(r=>+(getCategoryTotals(r.items)[c]||0).toFixed(2)),
+    borderColor:CATEGORIES[c].color, backgroundColor:CATEGORIES[c].color+'20', fill:true, tension:.3, pointRadius:5, pointHoverRadius:7, borderWidth:2
+  }));
+  charts['line-trends'] = new Chart(document.getElementById('line-trends'), {
+    type:'line', data:{labels:receipts.map(r=>r.label),datasets:ds},
+    options:{ responsive:true,maintainAspectRatio:false, scales:{ x:{grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3'}}, y:{grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3',callback:v=>v+'€'}} }, plugins:{ legend:{position:'bottom',labels:{color:'#8b8fa3',boxWidth:12,padding:12,font:{size:11}}}, tooltip:{...CHART_TOOLTIP,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}€`}} } }
+  });
+}
+
+function renderBarChange() {
+  destroyChart('bar-change'); if(receipts.length<2)return;
+  const prev=getCategoryTotals(receipts[receipts.length-2].items), curr=getCategoryTotals(receipts[receipts.length-1].items);
+  const cats=CATEGORY_ORDER.filter(c=>prev[c]>0.01||curr[c]>0.01);
+  const changes=cats.map(c=>+((curr[c]||0)-(prev[c]||0)).toFixed(2));
+  charts['bar-change'] = new Chart(document.getElementById('bar-change'), {
+    type:'bar', data:{ labels:cats.map(c=>CATEGORIES[c].icon+' '+c), datasets:[{data:changes,backgroundColor:changes.map(v=>v>=0?'rgba(248,113,113,.7)':'rgba(52,211,153,.7)'),borderRadius:4}] },
+    options:{ responsive:true,maintainAspectRatio:false, scales:{ x:{grid:{display:false},ticks:{color:'#8b8fa3',font:{size:10}}}, y:{grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3',callback:v=>(v>=0?'+':'')+v+'€'}} }, plugins:{ legend:{display:false}, tooltip:{...CHART_TOOLTIP,callbacks:{label:ctx=>` ${ctx.parsed.y>=0?'+':''}${ctx.parsed.y.toFixed(2)}€`}} } }
+  });
+}
+
+function renderBarEvolution() {
+  destroyChart('bar-evolution'); if(!receipts.length)return;
+  charts['bar-evolution'] = new Chart(document.getElementById('bar-evolution'), {
+    type:'bar', data:{ labels:receipts.map(r=>r.label), datasets:[{label:'Total',data:receipts.map(r=>r.total),backgroundColor:'rgba(108,99,255,.6)',borderRadius:6}] },
+    options:{ responsive:true,maintainAspectRatio:false, scales:{ x:{grid:{display:false},ticks:{color:'#8b8fa3'}}, y:{grid:{color:'rgba(42,46,61,.5)'},ticks:{color:'#8b8fa3',callback:v=>v+'€'},beginAtZero:true} }, plugins:{ legend:{display:false}, tooltip:{...CHART_TOOLTIP,callbacks:{label:ctx=>` Total: ${ctx.parsed.y.toFixed(2)}€`}} } }
+  });
+}
+
+// ==============================================================
+// UI RENDERING
+// ==============================================================
+function isFoodOnly() {
+  return document.getElementById('food-only-toggle')?.checked || false;
+}
+
+function getFilteredItems(receiptItems) {
+  if (isFoodOnly()) return receiptItems.filter(it => it.category !== 'Hygiène & Maison');
+  return receiptItems;
+}
+
+function renderStatCards() {
+  const el = document.getElementById('stat-cards');
+  if (!receipts.length) { el.innerHTML=''; return; }
+
+  const allItems = receipts.flatMap(r => getFilteredItems(r.items));
+  const totalSpent = allItems.reduce((s,it) => s+it.price, 0);
+  const avg = totalSpent / receipts.length;
+  const totalItemCount = allItems.length;
+
+  let changeHtml = '';
+  if (receipts.length >= 2) {
+    const prevItems = getFilteredItems(receipts[receipts.length-2].items);
+    const currItems = getFilteredItems(receipts[receipts.length-1].items);
+    const prevTotal = prevItems.reduce((s,it)=>s+it.price,0);
+    const currTotal = currItems.reduce((s,it)=>s+it.price,0);
+    const diff = currTotal - prevTotal;
+    const pct = prevTotal > 0 ? ((diff/prevTotal)*100).toFixed(1) : '0';
+    changeHtml = `<span class="stat-badge ${diff>0?'badge-up':'badge-down'}">${diff>0?'+':''}${pct}%</span>`;
+  }
+
+  const modeLabel = isFoodOnly() ? ' (Food Only)' : '';
+
+  // Alcohol stats
+  const allAlcohol = receipts.flatMap(r => r.items.filter(isAlcohol));
+  const totalAlcohol = allAlcohol.reduce((s,it) => s+it.price, 0);
+  const allTotal = receipts.reduce((s,r) => s+r.total, 0);
+  const pctOfTotal = allTotal > 0 ? ((totalAlcohol/allTotal)*100).toFixed(1) : '0';
+  let alcTrendHtml = '';
+  if (receipts.length >= 2) {
+    const prevAlc = receipts[receipts.length-2].items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
+    const currAlc = receipts[receipts.length-1].items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
+    const diff = currAlc - prevAlc;
+    if (prevAlc > 0) {
+      const p = ((diff/prevAlc)*100).toFixed(0);
+      alcTrendHtml = `<span class="stat-badge ${diff>0?'badge-up':'badge-down'}">${diff>0?'+':''}${p}%</span>`;
+    }
+  }
+  const topAlcohol = [...allAlcohol].sort((a,b)=>b.price-a.price).slice(0,3);
+  const perReceiptAlc = receipts.map(r => {
+    const a = r.items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
+    return r.label + ': ' + a.toFixed(2) + '€';
+  }).join(' · ');
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:4px">
+      <div class="stat-card"><div class="stat-label">Total Spent${modeLabel}</div><div class="stat-value">${totalSpent.toFixed(2)}€</div><div class="stat-sub">${receipts.length} receipt(s) ${changeHtml}</div></div>
+      <div class="stat-card"><div class="stat-label">Average per Receipt</div><div class="stat-value">${avg.toFixed(2)}€</div><div class="stat-sub">${totalItemCount} items total</div></div>
+      <div class="stat-card"><div class="stat-label">Latest Receipt</div><div class="stat-value">${getFilteredItems(receipts[receipts.length-1].items).reduce((s,it)=>s+it.price,0).toFixed(2)}€</div><div class="stat-sub">${receipts[receipts.length-1].label}</div></div>
+      <div class="alcohol-card">
+        <div class="stat-label">🍷 Alcohol Spend</div>
+        <div class="stat-value alcohol-highlight">${totalAlcohol.toFixed(2)}€</div>
+        <div class="stat-sub">${pctOfTotal}% of total · ${allAlcohol.length} items ${alcTrendHtml}</div>
+        ${topAlcohol.length ? `<div style="margin-top:8px;font-size:.75rem;color:var(--dim)">${topAlcohol.map(it=>`<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${it.name.substring(0,22)}</span><span style="color:var(--orange);font-weight:600">${it.price.toFixed(2)}€</span></div>`).join('')}</div>` : ''}
+        <div style="margin-top:6px;font-size:.68rem;color:var(--dim);opacity:.5">${perReceiptAlc}</div>
+      </div>
+    </div>`;
+}
+
+function renderAlcoholCard() {
+  const el = document.getElementById('alcohol-card');
+  if (!receipts.length) { el.innerHTML=''; return; }
+
+  const allAlcohol = receipts.flatMap(r => r.items.filter(isAlcohol));
+  const totalAlcohol = allAlcohol.reduce((s,it) => s+it.price, 0);
+  const allTotal = receipts.reduce((s,r) => s+r.total, 0);
+  const pctOfTotal = allTotal > 0 ? ((totalAlcohol/allTotal)*100).toFixed(1) : '0';
+
+  // Per receipt breakdown
+  let trendHtml = '';
+  if (receipts.length >= 2) {
+    const prevAlc = receipts[receipts.length-2].items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
+    const currAlc = receipts[receipts.length-1].items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
+    const diff = currAlc - prevAlc;
+    if (prevAlc > 0) {
+      const pctChange = ((diff/prevAlc)*100).toFixed(0);
+      trendHtml = `<span class="stat-badge ${diff>0?'badge-up':'badge-down'}">${diff>0?'+':''}${pctChange}%</span>`;
+    }
+  }
+
+  const topAlcohol = [...allAlcohol].sort((a,b)=>b.price-a.price).slice(0,3);
+
+  el.innerHTML = `
+    <div class="stat-label">🍷 Alcohol Spend</div>
+    <div class="stat-value alcohol-highlight">${totalAlcohol.toFixed(2)}€</div>
+    <div class="stat-sub">${pctOfTotal}% of total · ${allAlcohol.length} items ${trendHtml}</div>
+    ${topAlcohol.length ? `<div style="margin-top:10px;font-size:.78rem;color:var(--dim)">
+      ${topAlcohol.map(it => `<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${it.name.substring(0,30)}</span><span style="color:var(--orange);font-weight:600">${it.price.toFixed(2)}€</span></div>`).join('')}
+    </div>` : ''}
+    <div style="margin-top:8px;font-size:.72rem;color:var(--dim);opacity:.6">Per receipt: ${receipts.map(r => {
+      const a = r.items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
+      return r.label + ': ' + a.toFixed(2) + '€';
+    }).join(' · ')}</div>`;
+}
+
+function renderPills(id) {
+  document.getElementById(id).innerHTML = receipts.map((r,i) =>
+    `<div class="receipt-pill ${i===selectedReceiptIdx?'active':''}" onclick="selectedReceiptIdx=${i};renderAll()">
+      ${r.label} · ${r.total.toFixed(2)}€
+      <button class="receipt-delete" onclick="event.stopPropagation();receipts.splice(${i},1);if(selectedReceiptIdx>=${receipts.length})selectedReceiptIdx=Math.max(0,receipts.length-1);saveState();renderAll()" title="Remove">×</button>
+    </div>`
+  ).join('');
+}
+
+function renderItemsCategoryChips() {
+  if (!receipts.length) return;
+  const r = receipts[selectedReceiptIdx];
+  const cats = getCategoryTotals(r.items);
+  const active = activeCats(cats);
+  const el = document.getElementById('items-cat-chips');
+  el.innerHTML = `<div class="filter-chip ${itemsCategoryFilter===null?'active':''}" onclick="itemsCategoryFilter=null;renderItemsTable()">All</div>` +
+    active.map(c => `<div class="filter-chip ${itemsCategoryFilter===c?'active':''}" onclick="itemsCategoryFilter='${c}';renderItemsTable()">${CATEGORIES[c].icon} ${c}</div>`).join('');
+}
+
+function renderItemsTable() {
+  const tbody = document.getElementById('items-tbody');
+  const summary = document.getElementById('items-summary');
+  if (!receipts.length) { tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--dim);padding:20px">No receipts loaded</td></tr>'; summary.textContent=''; return; }
+  const r = receipts[selectedReceiptIdx];
+  const q = (document.getElementById('item-search')?.value||'').trim();
+  renderItemsCategoryChips();
+
+  let items = [...r.items];
+  // Category filter
+  if (itemsCategoryFilter) items = items.filter(it => it.category === itemsCategoryFilter);
+
+  // Fuzzy search
+  if (q) {
+    items = items.map(it => {
+      const nameScore = fuzzyScore(it.name, q);
+      const catScore = fuzzyScore(it.category, q);
+      const score = Math.max(nameScore, catScore);
+      return { ...it, _score: score };
+    }).filter(it => it._score > 0).sort((a, b) => b._score - a._score || b.price - a.price);
+  } else {
+    items.sort((a, b) => b.price - a.price);
+  }
+
+  const totalFiltered = items.reduce((s,it) => s + it.price, 0);
+  summary.innerHTML = `${items.length} items · <strong>${totalFiltered.toFixed(2)}€</strong>${q ? ` matching "<em>${q}</em>"` : ''}${itemsCategoryFilter ? ` in ${itemsCategoryFilter}` : ''}`;
+
+  // Highlight matching chars in name
+  function highlightMatch(text, query) {
+    if (!query) return text;
+    const lower = text.toLowerCase();
+    const qlower = query.toLowerCase();
+    // Try substring highlight first
+    const idx = lower.indexOf(qlower);
+    if (idx >= 0) {
+      return text.substring(0, idx) + '<mark style="background:rgba(108,99,255,.3);color:var(--text);border-radius:2px;padding:0 1px">' + text.substring(idx, idx + query.length) + '</mark>' + text.substring(idx + query.length);
+    }
+    // Fuzzy highlight
+    let result = '', qi = 0;
+    for (let i = 0; i < text.length; i++) {
+      if (qi < qlower.length && text[i].toLowerCase() === qlower[qi]) {
+        result += '<mark style="background:rgba(108,99,255,.3);color:var(--text);border-radius:2px;padding:0 1px">' + text[i] + '</mark>';
+        qi++;
+      } else {
+        result += text[i];
+      }
+    }
+    return result;
+  }
+
+  tbody.innerHTML = items.map(it =>
+    `<tr><td>${highlightMatch(it.name, q)}</td><td><span class="cat-dot" style="background:${CATEGORIES[it.category]?.color||'#666'}"></span>${highlightMatch(it.category, q)}</td><td style="text-align:right;font-weight:600">${it.price.toFixed(2)}€</td></tr>`
+  ).join('');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.add('hidden'));
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  renderAll();
+}
+
+function renderAll() {
+  renderStatCards();
+  // Overview charts use food-only filter
+  const allItems = receipts.flatMap(r => getFilteredItems(r.items));
+  const totals = getCategoryTotals(allItems);
+  renderDonut('donut-total', totals, 'total-amount');
+  renderLegend('legend-total', totals);
+  renderBarStacked();
+  renderPills('receipt-pills-detail');
+  renderPills('receipt-pills-items');
+  if (receipts.length) {
+    const r = receipts[selectedReceiptIdx];
+    const ct = getCategoryTotals(r.items);
+    renderDonut('donut-detail', ct, 'detail-amount');
+    document.getElementById('detail-sublabel').textContent = r.label;
+    renderLegend('legend-detail', ct);
+    renderDetailCategoryChips(r);
+    renderBarTopItems(r);
+  }
+  renderLineTrends();
+  renderBarChange();
+  renderBarEvolution();
+  renderItemsTable();
+}
+
+// ==============================================================
+// INIT
+// ==============================================================
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+// file:// detection — web workers need HTTP to load cross-origin scripts
+if (location.protocol === 'file:') {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999;background:#1e1b4b;border-top:2px solid #6c63ff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:.88rem';
+  banner.innerHTML = `
+    <div>
+      <strong style="color:#a78bfa">Local server required for OCR.</strong>
+      <span style="color:#8b8fa3"> Open a terminal in this folder and run one of:</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button onclick="navigator.clipboard.writeText('python3 -m http.server 8000');this.textContent='Copied!'" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.82rem;font-weight:600">
+        python3 -m http.server 8000
+      </button>
+      <button onclick="navigator.clipboard.writeText('npx serve .');this.textContent='Copied!'" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.82rem;font-weight:600">
+        npx serve .
+      </button>
+      <span style="color:#8b8fa3;align-self:center">then open <b style="color:#e4e6ef">localhost:8000</b></span>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
