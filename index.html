@@ -792,41 +792,7 @@ function renderStatCards() {
     </div>`;
 }
 
-function renderAlcoholCard() {
-  const el = document.getElementById('alcohol-card');
-  if (!receipts.length) { el.innerHTML=''; return; }
-
-  const allAlcohol = receipts.flatMap(r => r.items.filter(isAlcohol));
-  const totalAlcohol = allAlcohol.reduce((s,it) => s+it.price, 0);
-  const allTotal = receipts.reduce((s,r) => s+r.total, 0);
-  const pctOfTotal = allTotal > 0 ? ((totalAlcohol/allTotal)*100).toFixed(1) : '0';
-
-  // Per receipt breakdown
-  let trendHtml = '';
-  if (receipts.length >= 2) {
-    const prevAlc = receipts[receipts.length-2].items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
-    const currAlc = receipts[receipts.length-1].items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
-    const diff = currAlc - prevAlc;
-    if (prevAlc > 0) {
-      const pctChange = ((diff/prevAlc)*100).toFixed(0);
-      trendHtml = `<span class="stat-badge ${diff>0?'badge-up':'badge-down'}">${diff>0?'+':''}${pctChange}%</span>`;
-    }
-  }
-
-  const topAlcohol = [...allAlcohol].sort((a,b)=>b.price-a.price).slice(0,3);
-
-  el.innerHTML = `
-    <div class="stat-label">🍷 Alcohol Spend</div>
-    <div class="stat-value alcohol-highlight">${totalAlcohol.toFixed(2)}€</div>
-    <div class="stat-sub">${pctOfTotal}% of total · ${allAlcohol.length} items ${trendHtml}</div>
-    ${topAlcohol.length ? `<div style="margin-top:10px;font-size:.78rem;color:var(--dim)">
-      ${topAlcohol.map(it => `<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${it.name.substring(0,30)}</span><span style="color:var(--orange);font-weight:600">${it.price.toFixed(2)}€</span></div>`).join('')}
-    </div>` : ''}
-    <div style="margin-top:8px;font-size:.72rem;color:var(--dim);opacity:.6">Per receipt: ${receipts.map(r => {
-      const a = r.items.filter(isAlcohol).reduce((s,it)=>s+it.price,0);
-      return r.label + ': ' + a.toFixed(2) + '€';
-    }).join(' · ')}</div>`;
-}
+// Alcohol card is now rendered inline in renderStatCards()
 
 function renderPills(id) {
   document.getElementById(id).innerHTML = receipts.map((r,i) =>
