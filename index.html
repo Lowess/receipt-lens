@@ -19,7 +19,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .navbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:rgba(15,17,23,0.92);backdrop-filter:blur(20px)}
 .navbar h1{font-size:1.3rem;font-weight:700;letter-spacing:-0.5px}
 .navbar h1 span{color:var(--accent)}
-.nav-actions{display:flex;gap:10px}
+.nav-actions{display:flex;gap:10px;flex-wrap:wrap}
 
 .btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--accent);color:#fff}
@@ -28,7 +28,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .btn-outline:hover{border-color:var(--accent);color:var(--text)}
 
 /* TABS */
-.tabs{display:flex;gap:4px;padding:20px 32px 0}
+.tabs{display:flex;gap:4px;padding:20px 32px 0;flex-wrap:wrap}
 .tab{padding:10px 20px;border-radius:10px 10px 0 0;cursor:pointer;font-size:.9rem;font-weight:500;color:var(--dim);background:transparent;border:1px solid transparent;border-bottom:none;transition:all .2s}
 .tab:hover{color:var(--text);background:var(--card)}
 .tab.active{color:var(--accent);background:var(--card);border-color:var(--border);border-bottom-color:var(--card)}
@@ -50,6 +50,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .stat-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600}
 .badge-up{background:rgba(248,113,113,.15);color:var(--red)}
 .badge-down{background:rgba(52,211,153,.15);color:var(--green)}
+.badge-warn{background:rgba(251,146,60,.15);color:var(--orange)}
 
 /* CHARTS */
 .chart-wrap{position:relative;width:100%;max-width:320px;margin:0 auto}
@@ -71,7 +72,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .items-table th{text-align:left;padding:10px 12px;color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
 .items-table td{padding:8px 12px;border-bottom:1px solid rgba(42,46,61,.5)}
 .items-table tr:hover td{background:rgba(108,99,255,.05)}
-.cat-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.cat-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;flex-shrink:0}
+.cat-cell{display:flex;align-items:center}
+.cat-select{background:transparent;border:none;color:var(--text);font-size:.85rem;cursor:pointer;padding:2px 4px;border-radius:4px;transition:background .2s;max-width:180px}
+.cat-select:hover{background:rgba(108,99,255,.1)}
+.cat-select:focus{outline:1px solid var(--accent);background:rgba(108,99,255,.1)}
+.cat-select option{background:var(--card);color:var(--text)}
 
 /* LEGEND */
 .legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:16px}
@@ -101,14 +107,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .fade-in{animation:fadeIn .4s ease-out}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-/* FILTER CHIPS (reusable) */
+/* FILTER CHIPS */
 .filter-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .filter-chip{padding:5px 12px;border-radius:16px;cursor:pointer;font-size:.78rem;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--dim);transition:all .2s;user-select:none}
 .filter-chip:hover{border-color:var(--accent);color:var(--text)}
 .filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.filter-chip.excluded{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3);text-decoration:line-through}
 
-/* EXPAND/COLLAPSE */
+/* EXPAND */
 .expand-btn{background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:500;transition:all .2s;margin-top:8px}
 .expand-btn:hover{border-color:var(--accent);color:var(--text)}
 
@@ -127,9 +132,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .toggle-switch input:checked+.toggle-slider{background:var(--green)}
 .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
 
-/* ITEMS LIST (scrollable) */
+/* ITEMS LIST */
 .items-scroll{max-height:420px;overflow-y:auto}
 .items-scroll.expanded{max-height:none}
+
+/* BUDGET */
+.budget-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(42,46,61,.4)}
+.budget-row:last-child{border-bottom:none}
+.budget-cat{display:flex;align-items:center;gap:8px;width:160px;font-size:.85rem;flex-shrink:0}
+.budget-input{width:90px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;text-align:right}
+.budget-input:focus{outline:none;border-color:var(--accent)}
+.budget-bar-wrap{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;min-width:60px}
+.budget-bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.budget-spent{font-size:.78rem;color:var(--dim);width:110px;text-align:right;flex-shrink:0}
+.budget-over{color:var(--red)!important;font-weight:600}
 </style>
 </head>
 <body>
@@ -137,9 +153,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <nav class="navbar">
   <h1>🧾 Receipt<span>Lens</span></h1>
   <div class="nav-actions">
+    <button class="btn btn-outline" onclick="exportCSV()">📊 Export CSV</button>
     <button class="btn btn-outline" onclick="exportData()">📥 Export JSON</button>
     <button class="btn btn-primary" id="add-btn" onclick="document.getElementById('file-input').click()">➕ Add Receipt</button>
-    <input type="file" id="file-input" accept=".pdf" multiple onchange="handleFiles(this.files)">
+    <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple onchange="handleFiles(this.files)">
   </div>
 </nav>
 
@@ -148,16 +165,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
     <div class="tab" data-tab="detail" onclick="switchTab('detail')">Receipt Detail</div>
     <div class="tab" data-tab="trends" onclick="switchTab('trends')">Trends</div>
+    <div class="tab" data-tab="budget" onclick="switchTab('budget')">Budget</div>
     <div class="tab" data-tab="items" onclick="switchTab('items')">All Items</div>
   </div>
 
   <!-- OVERVIEW -->
   <div id="tab-overview" class="tab-content fade-in">
     <div class="toggle-row" style="margin-top:20px">
-      <span class="toggle-label">🥗 <strong>Food Only</strong> — exclude Hygiène & Maison from totals and charts</span>
+      <span class="toggle-label">🥗 <strong>Food Only</strong> — exclude Hygiène &amp; Maison from totals and charts</span>
       <label class="toggle-switch"><input type="checkbox" id="food-only-toggle" onchange="renderAll()"><span class="toggle-slider"></span></label>
     </div>
     <div id="stat-cards" style="margin-top:12px"></div>
+    <div id="budget-overview"></div>
     <div class="grid-2" style="margin-top:20px">
       <div class="panel">
         <div class="panel-title">Spending by Category (All Receipts)</div>
@@ -179,8 +198,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3 3 0 013.182 3.57A4.5 4.5 0 0118 19.5H6.75z"/>
       </svg>
-      <p>Drop Leclerc receipt PDFs here or click to upload</p>
-      <div class="hint">Scanned receipt images are OCR'd automatically in your browser — nothing leaves your machine</div>
+      <p>Drop Leclerc receipt PDFs or images (JPG, PNG, WebP) here or click to upload</p>
+      <div class="hint">OCR runs entirely in your browser — nothing leaves your machine</div>
     </div>
     <div class="ocr-progress" id="ocr-progress">
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
@@ -231,6 +250,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
   </div>
 
+  <!-- BUDGET -->
+  <div id="tab-budget" class="tab-content hidden fade-in">
+    <div class="panel">
+      <div class="panel-title">Category Budgets — per shopping trip</div>
+      <p style="font-size:.82rem;color:var(--dim);margin-bottom:20px">Set a spending limit per category. Leave blank to disable. Progress bars appear on the Overview for your latest receipt.</p>
+      <div id="budget-inputs"></div>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="saveBudgets()">💾 Save Budgets</button>
+    </div>
+  </div>
+
   <!-- ITEMS -->
   <div id="tab-items" class="tab-content hidden fade-in">
     <div class="panel">
@@ -245,8 +274,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="panel" style="margin-top:10px;overflow-x:auto">
       <div id="items-summary" style="font-size:.82rem;color:var(--dim);margin-bottom:12px"></div>
-      <table class="items-table"><thead><tr><th>Item</th><th>Category</th><th style="text-align:right">Price (€)</th></tr></thead>
-      <tbody id="items-tbody"></tbody></table>
+      <table class="items-table">
+        <thead><tr><th>Item</th><th>Category — click to change</th><th style="text-align:right">Price (€)</th></tr></thead>
+        <tbody id="items-tbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -256,150 +287,163 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 // CATEGORIES
 // ==============================================================
 const CATEGORIES = {
-  'Bébé':              { color:'#f472b6', icon:'🍼', keywords:['babybio','boudoir','blediscuit','bonne nuit','assiette carotte','assiette patate douce','bol leg','ass legume','legumes vt riz babybio','legumes vt dinde','haricots vt dinde babybio','pt legumes agneau','pt legumes saumon','pt plat plet','pt plat legumes saumon','navet pt ps canard','gourde brasse','grde pom','grde panache'] },
-  'Fruits & Légumes':  { color:'#34d399', icon:'🥦', section:'FRUIT ET LEGUMES' },
-  'Viande':            { color:'#f87171', icon:'🥩', section:'BOUCHERIE' },
-  'Volailles':         { color:'#fb923c', icon:'🍗', section:'VOLAILLES' },
-  'Charcuterie':       { color:'#c084fc', icon:'🥓', section:'CHARCUTERIE' },
-  'Poissonnerie':      { color:'#38bdf8', icon:'🐟', section:'POISSONNERIE' },
-  'Crémerie':          { color:'#fbbf24', icon:'🧀', section:'CREMERIE' },
-  'Épicerie':          { color:'#a78bfa', icon:'🥫', section:'EPICERIE' },
-  'Boissons':          { color:'#2dd4bf', icon:'🥤', section:'LIQUIDE' },
-  'Alcool':            { color:'#e11d48', icon:'🍷', keywords:['biere','beer','ipa','blonde','triple','prestige','bush','anosteke','brewdog','feuillien','page 24','hildegarde','tandem','mouillee','mionetto','prosecco','champagne','vin ','wine','cidre','whisky','vodka','rhum','pastis','aperol','ricard'] },
-  'Hygiène & Maison':  { color:'#94a3b8', icon:'🧹', section:'DPH' },
+  'Bébé':             { color:'#f472b6', icon:'🍼', keywords:['babybio','boudoir','blediscuit','bonne nuit','assiette carotte','assiette patate douce','bol leg','ass legume','legumes vt riz babybio','legumes vt dinde','haricots vt dinde babybio','pt legumes agneau','pt legumes saumon','pt plat plet','pt plat legumes saumon','navet pt ps canard','gourde brasse','grde pom','grde panache'] },
+  'Fruits & Légumes': { color:'#34d399', icon:'🥦', section:'FRUIT ET LEGUMES' },
+  'Viande':           { color:'#f87171', icon:'🥩', section:'BOUCHERIE' },
+  'Volailles':        { color:'#fb923c', icon:'🍗', section:'VOLAILLES' },
+  'Charcuterie':      { color:'#c084fc', icon:'🥓', section:'CHARCUTERIE' },
+  'Poissonnerie':     { color:'#38bdf8', icon:'🐟', section:'POISSONNERIE' },
+  'Crémerie':         { color:'#fbbf24', icon:'🧀', section:'CREMERIE' },
+  'Épicerie':         { color:'#a78bfa', icon:'🥫', section:'EPICERIE' },
+  'Boissons':         { color:'#2dd4bf', icon:'🥤', section:'LIQUIDE' },
+  'Alcool':           { color:'#e11d48', icon:'🍷', keywords:['biere','beer','ipa','blonde','triple','prestige','bush','anosteke','brewdog','feuillien','page 24','hildegarde','tandem','mouillee','mionetto','prosecco','champagne','vin ','wine','cidre','whisky','vodka','rhum','pastis','aperol','ricard'] },
+  'Hygiène & Maison': { color:'#94a3b8', icon:'🧹', section:'DPH' },
 };
 const CATEGORY_ORDER = Object.keys(CATEGORIES);
 const FOOD_CATEGORIES = CATEGORY_ORDER.filter(c => c !== 'Hygiène & Maison');
-
-// Alcohol keywords for sub-categorization within Boissons
 const ALCOHOL_KW = CATEGORIES['Alcool'].keywords;
 
 function categorize(name, section) {
   const lower = name.toLowerCase();
-  // Baby items first
-  for (const kw of CATEGORIES['Bébé'].keywords) {
-    if (lower.includes(kw)) return 'Bébé';
-  }
-  // Alcohol detection (within Boissons/LIQUIDE section or by keyword)
-  for (const kw of ALCOHOL_KW) {
-    if (lower.includes(kw)) return 'Alcool';
-  }
-  // Section-based
+  for (const kw of CATEGORIES['Bébé'].keywords) { if (lower.includes(kw)) return 'Bébé'; }
+  for (const kw of ALCOHOL_KW) { if (lower.includes(kw)) return 'Alcool'; }
   for (const [cat, conf] of Object.entries(CATEGORIES)) {
     if (conf.section && conf.section === section) return cat;
   }
   return 'Épicerie';
 }
-
-// Is the item alcoholic? (for items already categorized)
 function isAlcohol(item) { return item.category === 'Alcool'; }
 
 // ==============================================================
 // STATE
 // ==============================================================
 let receipts = [];
+let budgets = {};
 let selectedReceiptIdx = 0;
 let charts = {};
 let ocrWorker = null;
-let detailCategoryFilter = null; // null = all, or a category name
+let detailCategoryFilter = null;
 let topItemsExpanded = false;
-let itemsCategoryFilter = null; // null = all for items tab
+let itemsCategoryFilter = null;
+
+// ==============================================================
+// INDEXEDDB  (replaces localStorage — auto-migrates legacy data)
+// ==============================================================
+const DB = {
+  db: null,
+  async open() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('receiptlens', 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore('kv', { keyPath: 'key' });
+      req.onsuccess = e => { this.db = e.target.result; resolve(); };
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async get(key) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('kv', 'readonly');
+      const req = tx.objectStore('kv').get(key);
+      req.onsuccess = () => resolve(req.result?.value ?? null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async set(key, value) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put({ key, value });
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+};
 
 // ==============================================================
 // FUZZY SEARCH
 // ==============================================================
 function fuzzyMatch(text, query) {
   if (!query) return true;
-  text = text.toLowerCase();
-  query = query.toLowerCase();
-  // Exact substring match first
+  text = text.toLowerCase(); query = query.toLowerCase();
   if (text.includes(query)) return true;
-  // Fuzzy: all query chars must appear in order
   let qi = 0;
-  for (let ti = 0; ti < text.length && qi < query.length; ti++) {
-    if (text[ti] === query[qi]) qi++;
-  }
+  for (let ti = 0; ti < text.length && qi < query.length; ti++) { if (text[ti] === query[qi]) qi++; }
   return qi === query.length;
 }
 
 function fuzzyScore(text, query) {
   if (!query) return 0;
-  text = text.toLowerCase();
-  query = query.toLowerCase();
-  // Exact match = best score
+  text = text.toLowerCase(); query = query.toLowerCase();
   if (text === query) return 100;
-  // Starts with
   if (text.startsWith(query)) return 90;
-  // Contains exact substring
   const idx = text.indexOf(query);
   if (idx >= 0) return 80 - idx;
-  // Fuzzy match score: bonus for consecutive matches and early matches
   let qi = 0, score = 0, consecutive = 0;
   for (let ti = 0; ti < text.length && qi < query.length; ti++) {
-    if (text[ti] === query[qi]) {
-      qi++;
-      consecutive++;
-      score += consecutive * 2 + (ti < 5 ? 5 : 0);
-    } else {
-      consecutive = 0;
-    }
+    if (text[ti] === query[qi]) { qi++; consecutive++; score += consecutive * 2 + (ti < 5 ? 5 : 0); }
+    else { consecutive = 0; }
   }
   return qi === query.length ? score : -1;
 }
 
 // ==============================================================
-// OCR  — Tesseract.js in-browser
+// OCR  — Tesseract.js with French language model
 // ==============================================================
 async function getOCRWorker() {
   if (ocrWorker) return ocrWorker;
-  const w = await Tesseract.createWorker('eng', 1, {
+  const w = await Tesseract.createWorker('fra', 1, {
     workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
     corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0',
     logger: m => {
       if (m.status === 'recognizing text') {
-        const pct = Math.round(m.progress * 100);
-        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-fill').style.width = Math.round(m.progress * 100) + '%';
       }
     }
   });
-  await w.setParameters({ tessedit_pageseg_mode: '6' }); // PSM 6 = single uniform block
+  await w.setParameters({ tessedit_pageseg_mode: '6' });
   ocrWorker = w;
   return w;
 }
 
-// Render a PDF page to a canvas and return as image data
-async function pdfPageToImage(page) {
-  const scale = 2; // good balance speed vs quality
+async function pdfPageToCanvas(page) {
+  const scale = 2;
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const ctx = canvas.getContext('2d');
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  canvas.width = viewport.width; canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
   return canvas;
 }
 
+async function imageFileToCanvas(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.src = url;
+  });
+}
+
 function showProgress(pct, text) {
-  const el = document.getElementById('ocr-progress');
-  el.classList.add('active');
+  document.getElementById('ocr-progress').classList.add('active');
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-text').textContent = text;
 }
-function hideProgress() {
-  document.getElementById('ocr-progress').classList.remove('active');
-}
+function hideProgress() { document.getElementById('ocr-progress').classList.remove('active'); }
 
 async function ocrPDF(arrayBuffer) {
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const numPages = pdf.numPages;
   const worker = await getOCRWorker();
   let fullText = '';
-
   for (let i = 1; i <= numPages; i++) {
-    showProgress(Math.round((i - 1) / numPages * 100),
-      `OCR page ${i}/${numPages}...`);
+    showProgress(Math.round((i - 1) / numPages * 100), `OCR page ${i}/${numPages}...`);
     const page = await pdf.getPage(i);
-    const canvas = await pdfPageToImage(page);
+    const canvas = await pdfPageToCanvas(page);
     const { data: { text } } = await worker.recognize(canvas);
     fullText += text + '\n';
   }
@@ -407,13 +451,22 @@ async function ocrPDF(arrayBuffer) {
   return fullText;
 }
 
+async function ocrImage(file) {
+  showProgress(10, `Chargement de ${file.name}...`);
+  const canvas = await imageFileToCanvas(file);
+  showProgress(30, 'Reconnaissance du texte...');
+  const worker = await getOCRWorker();
+  const { data: { text } } = await worker.recognize(canvas);
+  showProgress(100, 'Parsing receipt...');
+  return text;
+}
+
 // ==============================================================
-// RECEIPT PARSER  (tuned against real Tesseract PSM-6 output)
+// RECEIPT PARSER
 // ==============================================================
 function parseReceiptText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-  // ---- Extract date ----
   let date = null, dateLabel = '';
   for (const line of lines) {
     const m1 = line.match(/(\d{1,2})\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)\s+(\d{4})/i);
@@ -432,42 +485,27 @@ function parseReceiptText(text) {
     }
   }
 
-  // ---- Parse items ----
   let currentSection = 'EPICERIE';
   const items = [];
-  const seen = new Set(); // dedup garbled cross-page repeats
+  const seen = new Set();
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-
-    // Stop at total
     if (/^Total\s+\d+\s+articles/i.test(line)) break;
-
-    // Section header
     const secMatch = line.match(/^>>\s*(.+)/);
     if (secMatch) { currentSection = secMatch[1].trim(); continue; }
-
-    // Skip metadata / non-item lines
     if (/^(Caisse|Bon immediat|Reste|CB\s|Code\s|LECLERC|de\s+\d|fermeture|TTC\s|CARTE|CIC|DEBIT|MONTANT|9{2}\d{10}|BONS DE|VINAIGRE BALSA.*1\.\d{2}$|LOT VOLVIC|2E\s|CONCOMBRE.*Lot|PAGE 24.*Lot|Total Bon|Avec la|TROPICANA.*euros|Vous venez|CUMUL|Ce CUMUL|Modalit|En \d{4}|grace|Merci|Vos vignettes|Solde|Exclusiv|PHOTO E|30%|sur L|avec le code|\*Offre|inclus|le logiciel|E\.Leclerc|impression|postaux|autre promotion|Généré|Ticket \d|contact|salouel|BRAVO|VOUS AVEZ|Rendez|application|pour faire|Super Jeu|découvrir|Votre acc|minutes|Jeu du|\*{4}|^\d{2}\s+\d{2}\s+\d{2}|^[A-Z]\d{5}|XXXXX|9B9E|No AUTO|\.{3})/i.test(line)) continue;
-    if (/^[\d\s%]+$/.test(line)) continue; // e.g. "1 5%50"
+    if (/^[\d\s%]+$/.test(line)) continue;
     if (/^(Réagir|Parlez|anonyme|www\.|03\d{8}|L'échange|tout produit|d'origine|votre E|a l'accueil|Hors produits|sous-v)/i.test(line)) continue;
 
-    // Item with price on same line:
-    //   "BISCUIT 168G MULTICEREALES CHOC 2.66 1"
-    //   "2 X 2.78€ 5.56 1"  (multiplier line with total price)
-    //   Handle OCR noise: @->0, garbled prices like "231", "5s63:", "2.701.", "La77"
-
-    // Multiplier+price line: "2 X 2.78€ 5.56 1" or "2X 1.17€ 2.34 1" or garbled "2 -X '3015€ 6.30 5"
     const multMatch = line.match(/^(\d+)\s*[-—]?\s*X\s*['\d.,]+€?\s+([\d.,@]+)\s+\d/i);
     if (multMatch) {
       const price = cleanPrice(multMatch[2]);
       if (price > 0 && i > 0) {
-        // Find the item name — look back for the most recent name-only line
         for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
           const prev = lines[j].trim();
           if (/^>>\s/.test(prev)) break;
           if (/^\d+\s*X\s/i.test(prev)) continue;
-          // This should be the item name (possibly with a garbled tail)
           const nameOnly = prev.replace(/\s+[\d.,@]+\s+\d\s*$/, '').replace(/^\*\s*/, '').trim();
           if (nameOnly.length > 2 && !/^(Caisse|Bon |Reste|Total)/i.test(nameOnly)) {
             const key = nameOnly.substring(0, 20) + '|' + price;
@@ -482,16 +520,12 @@ function parseReceiptText(text) {
       continue;
     }
 
-    // Standalone multiplier without price on same line (skip)
     if (/^\d+\s*X\s*[\d.,]+€?\s*$/i.test(line)) continue;
 
-    // Regular item line: "HARICOTS BEURRE EXTRA-FINS 4.80 1"
-    // Also handles OCR-garbled prices like "La77" (=1.77), "5s63:" (=5.63), "2.701." (=2.71)
     const itemMatch = line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]+[.;:']?)\s+\d\s*$/);
     if (itemMatch) {
       const name = itemMatch[2].replace(/^\*\s*/, '').trim();
       const price = cleanPrice(itemMatch[3]);
-      // Skip if name looks garbled (too many non-alpha chars)
       const alphaRatio = (name.match(/[A-Za-zÀ-ÿ]/g) || []).length / name.length;
       if (price > 0 && name.length > 2 && alphaRatio > 0.4) {
         const key = name.substring(0, 20) + '|' + price;
@@ -500,11 +534,9 @@ function parseReceiptText(text) {
           items.push({ name, price, section: currentSection, category: categorize(name, currentSection) });
         }
       }
-      continue;
     }
   }
 
-  // Total
   let total = 0;
   const totalMatch = text.match(/Total\s+\d+\s+articles\s+([\d.,]+)/);
   if (totalMatch) total = parseFloat(totalMatch[1].replace(',', '.'));
@@ -514,24 +546,15 @@ function parseReceiptText(text) {
 }
 
 function cleanPrice(raw) {
-  // Handle OCR artifacts: @ -> 0, remove trailing dots/commas/colons, fix common misreads
   let s = raw.replace(/@/g, '0').replace(/,/g, '.').replace(/[;:'"]+$/g, '').replace(/[;:'"]+/g, '.');
-  // Common OCR letter→digit substitutions at start: L/l→1, Z/z→2, O/o→0
   s = s.replace(/^[Ll]/, '1').replace(/^[Zz]/, '2').replace(/^[Oo]/, '0');
-  // Mid-string: o→0, s between digits likely a decimal point
   s = s.replace(/([0-9])[sS]([0-9])/g, '$1.$2');
   s = s.replace(/[Oo]/g, '0');
-  // Remove any remaining non-numeric chars except dots
   s = s.replace(/[^0-9.]/g, '');
-  // Remove trailing dots
   s = s.replace(/\.+$/, '');
-  // Handle cases like "2701" -> remove middle dots if too many
   const dots = s.split('.').length - 1;
   if (dots > 1) { const parts = s.split('.'); s = parts.slice(0,-1).join('') + '.' + parts[parts.length-1]; }
-  // If no decimal point and length >= 3, insert one before last 2 digits
-  if (!s.includes('.') && s.length >= 3 && /^\d+$/.test(s)) {
-    s = s.slice(0, -2) + '.' + s.slice(-2);
-  }
+  if (!s.includes('.') && s.length >= 3 && /^\d+$/.test(s)) { s = s.slice(0, -2) + '.' + s.slice(-2); }
   const val = parseFloat(s);
   return isNaN(val) ? 0 : Math.round(val * 100) / 100;
 }
@@ -539,9 +562,17 @@ function cleanPrice(raw) {
 // ==============================================================
 // FILE HANDLING
 // ==============================================================
+const IMAGE_TYPES = new Set(['image/jpeg','image/jpg','image/png','image/webp']);
+
+function isImageFile(f) {
+  return IMAGE_TYPES.has(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name);
+}
+
 async function handleFiles(fileList) {
-  const files = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.endsWith('.pdf'));
-  if (files.length === 0) return;
+  const files = Array.from(fileList).filter(f =>
+    f.type === 'application/pdf' || f.name.endsWith('.pdf') || isImageFile(f)
+  );
+  if (!files.length) return;
 
   document.getElementById('add-btn').disabled = true;
   document.getElementById('add-btn').textContent = '⏳ Processing...';
@@ -550,17 +581,18 @@ async function handleFiles(fileList) {
     const file = files[fi];
     showProgress(0, `Processing ${file.name} (${fi + 1}/${files.length})...`);
     try {
-      const ab = await file.arrayBuffer();
-      const text = await ocrPDF(ab);
+      const text = (file.type === 'application/pdf' || file.name.endsWith('.pdf'))
+        ? await ocrPDF(await file.arrayBuffer())
+        : await ocrImage(file);
+
       const receipt = parseReceiptText(text);
       receipt.filename = file.name;
 
-      // Check for duplicates
       const dup = receipts.find(r => r.label === receipt.label && Math.abs(r.total - receipt.total) < 2);
       if (!dup && receipt.items.length > 0) {
         receipts.push(receipt);
         receipts.sort((a, b) => (a.date || 0) - (b.date || 0));
-        saveState();
+        await saveState();
       }
     } catch (e) {
       console.error('Failed to process', file.name, e);
@@ -575,22 +607,67 @@ async function handleFiles(fileList) {
 }
 
 // ==============================================================
-// PERSISTENCE
+// PERSISTENCE — IndexedDB with localStorage migration
 // ==============================================================
-function saveState() {
-  try {
-    localStorage.setItem('receiptlens_v2', JSON.stringify(receipts.map(r => ({ ...r, date: r.date?.toISOString() || null }))));
-  } catch(e) {}
+async function saveState() {
+  await DB.set('receipts', receipts.map(r => ({ ...r, date: r.date?.toISOString() || null })));
 }
-function loadState() {
-  try {
-    const raw = localStorage.getItem('receiptlens_v2');
-    if (raw) { receipts = JSON.parse(raw).map(r => ({ ...r, date: r.date ? new Date(r.date) : null })); }
-  } catch(e) {}
+
+async function loadState() {
+  const legacy = localStorage.getItem('receiptlens_v2');
+  if (legacy) {
+    try {
+      receipts = JSON.parse(legacy).map(r => ({ ...r, date: r.date ? new Date(r.date) : null }));
+      await saveState();
+      localStorage.removeItem('receiptlens_v2');
+    } catch(e) { receipts = []; }
+  } else {
+    const data = await DB.get('receipts');
+    if (data) receipts = data.map(r => ({ ...r, date: r.date ? new Date(r.date) : null }));
+  }
 }
+
+async function saveBudgets() {
+  for (const cat of CATEGORY_ORDER) {
+    const input = document.getElementById(`budget-${cat}`);
+    if (!input) continue;
+    const val = parseFloat(input.value);
+    if (!isNaN(val) && val > 0) budgets[cat] = val;
+    else delete budgets[cat];
+  }
+  await DB.set('budgets', budgets);
+  renderBudgetOverview();
+  const btn = document.querySelector('#tab-budget .btn-primary');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✅ Budgets sauvegardés!'; setTimeout(() => btn.textContent = orig, 2000); }
+}
+
+async function loadBudgets() {
+  const data = await DB.get('budgets');
+  if (data) budgets = data;
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify(receipts, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'receipt-data.json'; a.click();
+}
+
+function exportCSV() {
+  const rows = [['Receipt', 'Date', 'Item', 'Category', 'Section', 'Price (€)']];
+  for (const r of receipts) {
+    for (const it of r.items) {
+      rows.push([
+        r.label,
+        r.date?.toISOString().slice(0, 10) || '',
+        it.name,
+        it.category,
+        it.section || '',
+        it.price.toFixed(2)
+      ]);
+    }
+  }
+  const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'receipt-data.csv'; a.click();
 }
 
 // ==============================================================
@@ -644,10 +721,9 @@ function renderBarStacked() {
 
 function renderDetailCategoryChips(r) {
   if (!r) return;
-  const cats = getCategoryTotals(r.items);
-  const active = activeCats(cats);
-  const el = document.getElementById('detail-cat-chips');
-  el.innerHTML = `<div class="filter-chip ${detailCategoryFilter===null?'active':''}" onclick="detailCategoryFilter=null;renderDetailPanel()">All</div>` +
+  const cats = getCategoryTotals(r.items); const active = activeCats(cats);
+  document.getElementById('detail-cat-chips').innerHTML =
+    `<div class="filter-chip ${detailCategoryFilter===null?'active':''}" onclick="detailCategoryFilter=null;renderDetailPanel()">All</div>` +
     active.map(c => `<div class="filter-chip ${detailCategoryFilter===c?'active':''}" onclick="detailCategoryFilter='${c}';topItemsExpanded=false;renderDetailPanel()">${CATEGORIES[c].icon} ${c} <span style="opacity:.6">${cats[c].toFixed(0)}€</span></div>`).join('');
 }
 
@@ -659,8 +735,7 @@ function renderBarTopItems(r) {
   const limit = topItemsExpanded ? items.length : 10;
   const sorted = items.slice(0, limit);
 
-  const titleEl = document.getElementById('top-items-title');
-  titleEl.textContent = detailCategoryFilter
+  document.getElementById('top-items-title').textContent = detailCategoryFilter
     ? `${CATEGORIES[detailCategoryFilter]?.icon||''} ${detailCategoryFilter} — ${items.length} items (${items.reduce((s,i)=>s+i.price,0).toFixed(2)}€)`
     : `Top Items by Price`;
 
@@ -668,7 +743,6 @@ function renderBarTopItems(r) {
   expandBtn.style.display = items.length > 10 ? '' : 'none';
   expandBtn.textContent = topItemsExpanded ? `Show top 10 only ▲` : `Show all ${items.length} items ▼`;
 
-  // Adjust chart height for expanded view
   const chartWrap = document.querySelector('#bar-top-items').parentElement;
   chartWrap.style.height = topItemsExpanded ? Math.max(350, sorted.length * 28) + 'px' : '350px';
 
@@ -723,15 +797,71 @@ function renderBarEvolution() {
 }
 
 // ==============================================================
-// UI RENDERING
+// BUDGET UI
 // ==============================================================
-function isFoodOnly() {
-  return document.getElementById('food-only-toggle')?.checked || false;
+function renderBudgetInputs() {
+  const el = document.getElementById('budget-inputs');
+  if (!el) return;
+  el.innerHTML = CATEGORY_ORDER.map(cat => {
+    const conf = CATEGORIES[cat];
+    const val = budgets[cat] || '';
+    return `<div class="budget-row">
+      <div class="budget-cat"><span style="font-size:1.1rem">${conf.icon}</span>${cat}</div>
+      <input class="budget-input" type="number" id="budget-${cat}" placeholder="—" min="0" step="0.5" value="${val}">
+      <span style="font-size:.75rem;color:var(--dim);width:60px;flex-shrink:0">€ / course</span>
+    </div>`;
+  }).join('');
 }
 
+function renderBudgetOverview() {
+  const el = document.getElementById('budget-overview');
+  if (!el) return;
+  if (!Object.keys(budgets).length || !receipts.length) { el.innerHTML = ''; return; }
+
+  const last = receipts[receipts.length - 1];
+  const totals = getCategoryTotals(last.items);
+  const budgetedCats = CATEGORY_ORDER.filter(c => budgets[c] > 0 && totals[c] > 0.01);
+  if (!budgetedCats.length) { el.innerHTML = ''; return; }
+
+  const rows = budgetedCats.map(c => {
+    const spent = totals[c];
+    const limit = budgets[c];
+    const pct = Math.min((spent / limit) * 100, 100);
+    const over = spent > limit;
+    const barColor = over ? 'var(--red)' : pct > 80 ? 'var(--orange)' : CATEGORIES[c].color;
+    return `<div class="budget-row">
+      <div class="budget-cat"><span style="font-size:1rem">${CATEGORIES[c].icon}</span>${c}</div>
+      <div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
+      <div class="budget-spent ${over ? 'budget-over' : ''}">${spent.toFixed(2)}€ / ${limit}€${over ? ' ⚠️' : ''}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="panel" style="margin-top:12px"><div class="panel-title">Budget — ${last.label}</div>${rows}</div>`;
+}
+
+// ==============================================================
+// UI RENDERING
+// ==============================================================
+function isFoodOnly() { return document.getElementById('food-only-toggle')?.checked || false; }
+
 function getFilteredItems(receiptItems) {
-  if (isFoodOnly()) return receiptItems.filter(it => it.category !== 'Hygiène & Maison');
-  return receiptItems;
+  return isFoodOnly() ? receiptItems.filter(it => it.category !== 'Hygiène & Maison') : receiptItems;
+}
+
+function updateItemCategory(receiptIdx, itemOrigIdx, newCat) {
+  receipts[receiptIdx].items[itemOrigIdx].category = newCat;
+  saveState();
+  renderItemsTable();
+  const allItems = receipts.flatMap(r => getFilteredItems(r.items));
+  const totals = getCategoryTotals(allItems);
+  renderDonut('donut-total', totals, 'total-amount');
+  renderLegend('legend-total', totals);
+  if (receiptIdx === selectedReceiptIdx) {
+    const ct = getCategoryTotals(receipts[receiptIdx].items);
+    renderDonut('donut-detail', ct, 'detail-amount');
+    renderLegend('legend-detail', ct);
+  }
+  renderBudgetOverview();
 }
 
 function renderStatCards() {
@@ -745,18 +875,13 @@ function renderStatCards() {
 
   let changeHtml = '';
   if (receipts.length >= 2) {
-    const prevItems = getFilteredItems(receipts[receipts.length-2].items);
-    const currItems = getFilteredItems(receipts[receipts.length-1].items);
-    const prevTotal = prevItems.reduce((s,it)=>s+it.price,0);
-    const currTotal = currItems.reduce((s,it)=>s+it.price,0);
+    const prevTotal = getFilteredItems(receipts[receipts.length-2].items).reduce((s,it)=>s+it.price,0);
+    const currTotal = getFilteredItems(receipts[receipts.length-1].items).reduce((s,it)=>s+it.price,0);
     const diff = currTotal - prevTotal;
     const pct = prevTotal > 0 ? ((diff/prevTotal)*100).toFixed(1) : '0';
     changeHtml = `<span class="stat-badge ${diff>0?'badge-up':'badge-down'}">${diff>0?'+':''}${pct}%</span>`;
   }
 
-  const modeLabel = isFoodOnly() ? ' (Food Only)' : '';
-
-  // Alcohol stats
   const allAlcohol = receipts.flatMap(r => r.items.filter(isAlcohol));
   const totalAlcohol = allAlcohol.reduce((s,it) => s+it.price, 0);
   const allTotal = receipts.reduce((s,r) => s+r.total, 0);
@@ -777,8 +902,9 @@ function renderStatCards() {
     return r.label + ': ' + a.toFixed(2) + '€';
   }).join(' · ');
 
+  const modeLabel = isFoodOnly() ? ' (Food Only)' : '';
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:4px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px">
       <div class="stat-card"><div class="stat-label">Total Spent${modeLabel}</div><div class="stat-value">${totalSpent.toFixed(2)}€</div><div class="stat-sub">${receipts.length} receipt(s) ${changeHtml}</div></div>
       <div class="stat-card"><div class="stat-label">Average per Receipt</div><div class="stat-value">${avg.toFixed(2)}€</div><div class="stat-sub">${totalItemCount} items total</div></div>
       <div class="stat-card"><div class="stat-label">Latest Receipt</div><div class="stat-value">${getFilteredItems(receipts[receipts.length-1].items).reduce((s,it)=>s+it.price,0).toFixed(2)}€</div><div class="stat-sub">${receipts[receipts.length-1].label}</div></div>
@@ -792,8 +918,6 @@ function renderStatCards() {
     </div>`;
 }
 
-// Alcohol card is now rendered inline in renderStatCards()
-
 function renderPills(id) {
   document.getElementById(id).innerHTML = receipts.map((r,i) =>
     `<div class="receipt-pill ${i===selectedReceiptIdx?'active':''}" onclick="selectedReceiptIdx=${i};renderAll()">
@@ -805,32 +929,29 @@ function renderPills(id) {
 
 function renderItemsCategoryChips() {
   if (!receipts.length) return;
-  const r = receipts[selectedReceiptIdx];
-  const cats = getCategoryTotals(r.items);
+  const cats = getCategoryTotals(receipts[selectedReceiptIdx].items);
   const active = activeCats(cats);
-  const el = document.getElementById('items-cat-chips');
-  el.innerHTML = `<div class="filter-chip ${itemsCategoryFilter===null?'active':''}" onclick="itemsCategoryFilter=null;renderItemsTable()">All</div>` +
+  document.getElementById('items-cat-chips').innerHTML =
+    `<div class="filter-chip ${itemsCategoryFilter===null?'active':''}" onclick="itemsCategoryFilter=null;renderItemsTable()">All</div>` +
     active.map(c => `<div class="filter-chip ${itemsCategoryFilter===c?'active':''}" onclick="itemsCategoryFilter='${c}';renderItemsTable()">${CATEGORIES[c].icon} ${c}</div>`).join('');
 }
 
 function renderItemsTable() {
   const tbody = document.getElementById('items-tbody');
   const summary = document.getElementById('items-summary');
-  if (!receipts.length) { tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--dim);padding:20px">No receipts loaded</td></tr>'; summary.textContent=''; return; }
-  const r = receipts[selectedReceiptIdx];
-  const q = (document.getElementById('item-search')?.value||'').trim();
+  if (!receipts.length) {
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--dim);padding:20px">No receipts loaded</td></tr>';
+    summary.textContent=''; return;
+  }
   renderItemsCategoryChips();
 
-  let items = [...r.items];
-  // Category filter
+  const q = (document.getElementById('item-search')?.value||'').trim();
+  let items = receipts[selectedReceiptIdx].items.map((it, origIdx) => ({ ...it, _origIdx: origIdx }));
   if (itemsCategoryFilter) items = items.filter(it => it.category === itemsCategoryFilter);
 
-  // Fuzzy search
   if (q) {
     items = items.map(it => {
-      const nameScore = fuzzyScore(it.name, q);
-      const catScore = fuzzyScore(it.category, q);
-      const score = Math.max(nameScore, catScore);
+      const score = Math.max(fuzzyScore(it.name, q), fuzzyScore(it.category, q));
       return { ...it, _score: score };
     }).filter(it => it._score > 0).sort((a, b) => b._score - a._score || b.price - a.price);
   } else {
@@ -840,44 +961,50 @@ function renderItemsTable() {
   const totalFiltered = items.reduce((s,it) => s + it.price, 0);
   summary.innerHTML = `${items.length} items · <strong>${totalFiltered.toFixed(2)}€</strong>${q ? ` matching "<em>${q}</em>"` : ''}${itemsCategoryFilter ? ` in ${itemsCategoryFilter}` : ''}`;
 
-  // Highlight matching chars in name
-  function highlightMatch(text, query) {
+  function highlight(text, query) {
     if (!query) return text;
-    const lower = text.toLowerCase();
-    const qlower = query.toLowerCase();
-    // Try substring highlight first
+    const lower = text.toLowerCase(), qlower = query.toLowerCase();
     const idx = lower.indexOf(qlower);
     if (idx >= 0) {
       return text.substring(0, idx) + '<mark style="background:rgba(108,99,255,.3);color:var(--text);border-radius:2px;padding:0 1px">' + text.substring(idx, idx + query.length) + '</mark>' + text.substring(idx + query.length);
     }
-    // Fuzzy highlight
     let result = '', qi = 0;
     for (let i = 0; i < text.length; i++) {
       if (qi < qlower.length && text[i].toLowerCase() === qlower[qi]) {
-        result += '<mark style="background:rgba(108,99,255,.3);color:var(--text);border-radius:2px;padding:0 1px">' + text[i] + '</mark>';
-        qi++;
-      } else {
-        result += text[i];
-      }
+        result += '<mark style="background:rgba(108,99,255,.3);color:var(--text);border-radius:2px;padding:0 1px">' + text[i] + '</mark>'; qi++;
+      } else result += text[i];
     }
     return result;
   }
 
+  const catOptions = CATEGORY_ORDER.map(c => `<option value="${c}">${CATEGORIES[c].icon} ${c}</option>`).join('');
+
   tbody.innerHTML = items.map(it =>
-    `<tr><td>${highlightMatch(it.name, q)}</td><td><span class="cat-dot" style="background:${CATEGORIES[it.category]?.color||'#666'}"></span>${highlightMatch(it.category, q)}</td><td style="text-align:right;font-weight:600">${it.price.toFixed(2)}€</td></tr>`
+    `<tr>
+      <td>${highlight(it.name, q)}</td>
+      <td>
+        <div class="cat-cell">
+          <span class="cat-dot" style="background:${CATEGORIES[it.category]?.color||'#666'}"></span>
+          <select class="cat-select" onchange="updateItemCategory(${selectedReceiptIdx},${it._origIdx},this.value)">
+            ${CATEGORY_ORDER.map(c => `<option value="${c}"${c===it.category?' selected':''}>${CATEGORIES[c].icon} ${c}</option>`).join('')}
+          </select>
+        </div>
+      </td>
+      <td style="text-align:right;font-weight:600">${it.price.toFixed(2)}€</td>
+    </tr>`
   ).join('');
 }
 
 function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
-  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.add('hidden'));
-  document.getElementById('tab-'+tab).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  if (tab === 'budget') renderBudgetInputs();
   renderAll();
 }
 
 function renderAll() {
   renderStatCards();
-  // Overview charts use food-only filter
   const allItems = receipts.flatMap(r => getFilteredItems(r.items));
   const totals = getCategoryTotals(allItems);
   renderDonut('donut-total', totals, 'total-amount');
@@ -898,6 +1025,7 @@ function renderAll() {
   renderBarChange();
   renderBarEvolution();
   renderItemsTable();
+  renderBudgetOverview();
 }
 
 // ==============================================================
@@ -905,7 +1033,6 @@ function renderAll() {
 // ==============================================================
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
-// file:// detection — web workers need HTTP to load cross-origin scripts
 if (location.protocol === 'file:') {
   const banner = document.createElement('div');
   banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999;background:#1e1b4b;border-top:2px solid #6c63ff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:.88rem';
@@ -915,19 +1042,19 @@ if (location.protocol === 'file:') {
       <span style="color:#8b8fa3"> Open a terminal in this folder and run one of:</span>
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0">
-      <button onclick="navigator.clipboard.writeText('python3 -m http.server 8000');this.textContent='Copied!'" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.82rem;font-weight:600">
-        python3 -m http.server 8000
-      </button>
-      <button onclick="navigator.clipboard.writeText('npx serve .');this.textContent='Copied!'" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.82rem;font-weight:600">
-        npx serve .
-      </button>
+      <button onclick="navigator.clipboard.writeText('python3 -m http.server 8000');this.textContent='Copied!'" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.82rem;font-weight:600">python3 -m http.server 8000</button>
+      <button onclick="navigator.clipboard.writeText('npx serve .');this.textContent='Copied!'" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.82rem;font-weight:600">npx serve .</button>
       <span style="color:#8b8fa3;align-self:center">then open <b style="color:#e4e6ef">localhost:8000</b></span>
     </div>`;
   document.body.appendChild(banner);
 }
 
-loadState();
-renderAll();
+(async () => {
+  await DB.open();
+  await loadState();
+  await loadBudgets();
+  renderAll();
+})();
 </script>
 </body>
 </html>
