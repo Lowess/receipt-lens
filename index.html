@@ -153,6 +153,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <nav class="navbar">
   <h1>🧾 Receipt<span>Lens</span></h1>
   <div class="nav-actions">
+    <button class="btn btn-outline" onclick="showDebugModal()">🔍 Debug OCR</button>
     <button class="btn btn-outline" onclick="exportCSV()">📊 Export CSV</button>
     <button class="btn btn-outline" onclick="exportData()">📥 Export JSON</button>
     <button class="btn btn-primary" id="add-btn" onclick="document.getElementById('file-input').click()">➕ Add Receipt</button>
@@ -319,6 +320,7 @@ function isAlcohol(item) { return item.category === 'Alcool'; }
 // ==============================================================
 let receipts = [];
 let budgets = {};
+let lastOCRText = '';
 let selectedReceiptIdx = 0;
 let charts = {};
 let ocrWorker = null;
@@ -448,6 +450,7 @@ async function ocrPDF(arrayBuffer) {
     fullText += text + '\n';
   }
   showProgress(100, 'Parsing receipt...');
+  lastOCRText = fullText;
   return fullText;
 }
 
@@ -458,14 +461,37 @@ async function ocrImage(file) {
   const worker = await getOCRWorker();
   const { data: { text } } = await worker.recognize(canvas);
   showProgress(100, 'Parsing receipt...');
+  lastOCRText = text;
   return text;
+}
+
+function showDebugModal() {
+  if (!lastOCRText) { alert('Aucun texte OCR disponible — charge d\'abord un ticket.'); return; }
+  const existing = document.getElementById('ocr-modal');
+  if (existing) { existing.remove(); return; }
+  const modal = document.createElement('div');
+  modal.id = 'ocr-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:24px';
+  modal.innerHTML = `
+    <div style="background:#1a1d27;border:1px solid #2a2e3d;border-radius:14px;width:100%;max-width:760px;max-height:90vh;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #2a2e3d">
+        <span style="font-weight:700;font-size:.95rem">🔍 Texte brut OCR — ${lastOCRText.split('\n').length} lignes</span>
+        <div style="display:flex;gap:8px">
+          <button onclick="navigator.clipboard.writeText(lastOCRText).then(()=>this.textContent='Copié ✅').catch(()=>{})" style="padding:6px 14px;border-radius:6px;border:1px solid #6c63ff;background:#6c63ff22;color:#c4b5fd;cursor:pointer;font-size:.8rem;font-weight:600">Copier</button>
+          <button onclick="document.getElementById('ocr-modal').remove()" style="padding:6px 14px;border-radius:6px;border:1px solid #2a2e3d;background:transparent;color:#8b8fa3;cursor:pointer;font-size:.8rem">Fermer</button>
+        </div>
+      </div>
+      <textarea readonly style="flex:1;background:#0f1117;color:#e4e6ef;font-family:monospace;font-size:.78rem;padding:16px;border:none;outline:none;resize:none;line-height:1.6;overflow-y:auto">${lastOCRText.replace(/</g,'&lt;')}</textarea>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
 }
 
 // ==============================================================
 // RECEIPT PARSER
 // ==============================================================
 function parseReceiptText(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
   let date = null, dateLabel = '';
   for (const line of lines) {
@@ -498,7 +524,8 @@ function parseReceiptText(text) {
     if (/^[\d\s%]+$/.test(line)) continue;
     if (/^(Réagir|Parlez|anonyme|www\.|03\d{8}|L'échange|tout produit|d'origine|votre E|a l'accueil|Hors produits|sous-v)/i.test(line)) continue;
 
-    const multMatch = line.match(/^(\d+)\s*[-—]?\s*X\s*['\d.,]+€?\s+([\d.,@]+)\s+\d/i);
+    // Multiplier line: "2 X 2.78€ 5.56 1" or "2 X 2.78€ 5.56" (trailing digit optional)
+    const multMatch = line.match(/^(\d+)\s*[-—]?\s*X\s*['\d.,]+€?\s+([\d.,@]+)\s*\d?\s*$/i);
     if (multMatch) {
       const price = cleanPrice(multMatch[2]);
       if (price > 0 && i > 0) {
@@ -506,7 +533,8 @@ function parseReceiptText(text) {
           const prev = lines[j].trim();
           if (/^>>\s/.test(prev)) break;
           if (/^\d+\s*X\s/i.test(prev)) continue;
-          const nameOnly = prev.replace(/\s+[\d.,@]+\s+\d\s*$/, '').replace(/^\*\s*/, '').trim();
+          // Strip trailing price+digit from name line
+          const nameOnly = prev.replace(/\s+[A-Za-z@]?[\d.,@]+[.;:']?\s*\d?\s*$/, '').replace(/^\*\s*/, '').trim();
           if (nameOnly.length > 2 && !/^(Caisse|Bon |Reste|Total)/i.test(nameOnly)) {
             const key = nameOnly.substring(0, 20) + '|' + price;
             if (!seen.has(key)) {
@@ -522,12 +550,17 @@ function parseReceiptText(text) {
 
     if (/^\d+\s*X\s*[\d.,]+€?\s*$/i.test(line)) continue;
 
-    const itemMatch = line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]+[.;:']?)\s+\d\s*$/);
+    // Item line with VAT digit: "HARICOTS BEURRE 4.80 1"
+    // Also try without trailing digit: "HARICOTS BEURRE 4.80"
+    const itemMatch =
+      line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]+[.;:']?)\s+\d\s*$/) ||
+      line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]{3,}[.;:']?)\s*$/);
     if (itemMatch) {
       const name = itemMatch[2].replace(/^\*\s*/, '').trim();
       const price = cleanPrice(itemMatch[3]);
-      const alphaRatio = (name.match(/[A-Za-zÀ-ÿ]/g) || []).length / name.length;
-      if (price > 0 && name.length > 2 && alphaRatio > 0.4) {
+      const alphaRatio = (name.match(/[A-Za-zÀ-ÿ]/g) || []).length / Math.max(name.length, 1);
+      // Price sanity: between 0.10€ and 500€, name must be mostly alphabetic
+      if (price >= 0.10 && price <= 500 && name.length > 2 && alphaRatio > 0.4) {
         const key = name.substring(0, 20) + '|' + price;
         if (!seen.has(key)) {
           seen.add(key);
