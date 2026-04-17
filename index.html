@@ -405,13 +405,23 @@ async function getOCRWorker() {
   return w;
 }
 
+function preprocessCanvas(src) {
+  const dst = document.createElement('canvas');
+  dst.width = src.width; dst.height = src.height;
+  const ctx = dst.getContext('2d');
+  // Grayscale + contrast boost — helps with faded thermal receipts
+  ctx.filter = 'grayscale(100%) contrast(180%) brightness(108%)';
+  ctx.drawImage(src, 0, 0);
+  return dst;
+}
+
 async function pdfPageToCanvas(page) {
-  const scale = 2;
-  const viewport = page.getViewport({ scale });
+  // Scale 3 = higher resolution → better OCR accuracy on small fonts
+  const viewport = page.getViewport({ scale: 3 });
   const canvas = document.createElement('canvas');
   canvas.width = viewport.width; canvas.height = viewport.height;
   await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-  return canvas;
+  return preprocessCanvas(canvas);
 }
 
 async function imageFileToCanvas(file) {
@@ -456,7 +466,8 @@ async function ocrPDF(arrayBuffer) {
 
 async function ocrImage(file) {
   showProgress(10, `Chargement de ${file.name}...`);
-  const canvas = await imageFileToCanvas(file);
+  const raw = await imageFileToCanvas(file);
+  const canvas = preprocessCanvas(raw);
   showProgress(30, 'Reconnaissance du texte...');
   const worker = await getOCRWorker();
   const { data: { text } } = await worker.recognize(canvas);
@@ -550,10 +561,10 @@ function parseReceiptText(text) {
 
     if (/^\d+\s*X\s*[\d.,]+€?\s*$/i.test(line)) continue;
 
-    // Item line with VAT digit: "HARICOTS BEURRE 4.80 1"
-    // Also try without trailing digit: "HARICOTS BEURRE 4.80"
+    // Item line: "HARICOTS BEURRE 4.80 1" or "LARDONS 1.48 01" (1–2 digit VAT code)
+    // Fallback: "PRODUIT 4.80" (no VAT code, as some fra OCR outputs)
     const itemMatch =
-      line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]+[.;:']?)\s+\d\s*$/) ||
+      line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]+[.;:']?)\s+\d{1,2}\s*$/) ||
       line.match(/^(\*?\s*)(.+?)\s+([A-Za-z@]?[\d.,@]{3,}[.;:']?)\s*$/);
     if (itemMatch) {
       const name = itemMatch[2].replace(/^\*\s*/, '').trim();
