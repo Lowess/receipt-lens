@@ -1047,12 +1047,23 @@ function parseReceiptText(text) {
     }
   }
 
-  let total = 0;
-  const totalMatch = text.match(/Total\s+\d+\s+articles\s+([\d.,]+)/);
-  if (totalMatch) total = parseFloat(totalMatch[1].replace(',', '.'));
-  else total = items.reduce((s, it) => s + it.price, 0);
+  // --- Totals & discounts ---
+  let subtotal = 0, discount = 0, amountPaid = 0;
 
-  return { date, dateLabel: dateLabel || 'Unknown', label: dateLabel || 'Unknown', total, items };
+  const totalMatch = text.match(/Total\s+\d+\s+articles\s+([\d.,]+)/i);
+  if (totalMatch) subtotal = parseFloat(totalMatch[1].replace(',', '.'));
+  else subtotal = items.reduce((s, it) => s + it.price, 0);
+
+  const bonMatch = text.match(/Bon\s+immediat\s+([\d.,]+)/i);
+  if (bonMatch) discount = parseFloat(bonMatch[1].replace(',', '.'));
+
+  const resteMatch = text.match(/Reste\s+[àa]\s+payer\s+([\d.,]+)/i);
+  if (resteMatch) amountPaid = parseFloat(resteMatch[1].replace(',', '.'));
+
+  // Use the amount actually paid (after immediate discounts) as the canonical total
+  const total = amountPaid > 0 ? amountPaid : subtotal;
+
+  return { date, dateLabel: dateLabel || 'Unknown', label: dateLabel || 'Unknown', total, subtotal, discount, items };
 }
 
 function cleanPrice(raw) {
@@ -1417,7 +1428,7 @@ function renderStatCards() {
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px">
       <div class="stat-card"><div class="stat-label">Total Spent${modeLabel}</div><div class="stat-value">${totalSpent.toFixed(2)}€</div><div class="stat-sub">${receipts.length} receipt(s) ${changeHtml}</div></div>
       <div class="stat-card"><div class="stat-label">Average per Receipt</div><div class="stat-value">${avg.toFixed(2)}€</div><div class="stat-sub">${totalItemCount} items total</div></div>
-      <div class="stat-card"><div class="stat-label">Latest Receipt</div><div class="stat-value">${getFilteredItems(receipts[receipts.length-1].items).reduce((s,it)=>s+it.price,0).toFixed(2)}€</div><div class="stat-sub">${receipts[receipts.length-1].label}</div></div>
+      <div class="stat-card"><div class="stat-label">Latest Receipt</div><div class="stat-value">${receipts[receipts.length-1].total.toFixed(2)}€</div><div class="stat-sub">${receipts[receipts.length-1].label}${receipts[receipts.length-1].discount > 0 ? ` <span class="stat-badge badge-down">-${receipts[receipts.length-1].discount.toFixed(2)}€ remise</span>` : ''}</div></div>
       <div class="alcohol-card">
         <div class="stat-label">🍷 Alcohol Spend</div>
         <div class="stat-value alcohol-highlight">${totalAlcohol.toFixed(2)}€</div>
@@ -1431,7 +1442,7 @@ function renderStatCards() {
 function renderPills(id) {
   document.getElementById(id).innerHTML = receipts.map((r,i) =>
     `<div class="receipt-pill ${i===selectedReceiptIdx?'active':''}" onclick="selectedReceiptIdx=${i};renderAll()">
-      ${r.label} · ${r.total.toFixed(2)}€
+      ${r.label} · ${r.total.toFixed(2)}€${r.discount > 0 ? ` (-${r.discount.toFixed(2)}€)` : ''}
       <button class="receipt-delete" onclick="event.stopPropagation();receipts.splice(${i},1);if(selectedReceiptIdx>=${receipts.length})selectedReceiptIdx=Math.max(0,receipts.length-1);saveState();renderAll()" title="Remove">×</button>
     </div>`
   ).join('');
