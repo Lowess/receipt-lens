@@ -632,6 +632,7 @@ body {
     <div class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
     <div class="tab" data-tab="detail" onclick="switchTab('detail')">Receipt Detail</div>
     <div class="tab" data-tab="trends" onclick="switchTab('trends')">Trends</div>
+    <div class="tab" data-tab="prices" onclick="switchTab('prices')">Prix</div>
     <div class="tab" data-tab="budget" onclick="switchTab('budget')">Budget</div>
     <div class="tab" data-tab="items" onclick="switchTab('items')">All Items</div>
   </div>
@@ -717,6 +718,40 @@ body {
     </div>
   </div>
 
+  <!-- PRICES -->
+  <div id="tab-prices" class="tab-content hidden fade-in">
+    <div class="panel">
+      <div class="panel-title">Suivi des prix — articles récurrents</div>
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+        <input type="text" id="prices-search" placeholder="Rechercher un article..."
+          style="flex:1;min-width:200px;padding:9px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:.88rem;font-family:var(--font);outline:none;transition:border-color .18s"
+          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"
+          oninput="renderPricesTab()">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+        <span style="font-size:.72rem;font-weight:700;color:var(--dim);letter-spacing:.06em;text-transform:uppercase">Trier :</span>
+        <div class="filter-chips" id="prices-sort-chips" style="margin-bottom:0"></div>
+      </div>
+      <div class="filter-chips" id="prices-cat-chips" style="margin-bottom:14px"></div>
+      <div id="prices-summary" style="font-size:.8rem;color:var(--muted);margin-bottom:14px"></div>
+      <div style="overflow-x:auto">
+        <table class="items-table">
+          <thead><tr>
+            <th>Article</th>
+            <th>Catégorie</th>
+            <th style="text-align:right">Min</th>
+            <th style="text-align:right">Moy</th>
+            <th style="text-align:right">Max</th>
+            <th style="text-align:right">Évolution</th>
+            <th>Historique</th>
+            <th style="text-align:right">Achats</th>
+          </tr></thead>
+          <tbody id="prices-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- BUDGET -->
   <div id="tab-budget" class="tab-content hidden fade-in">
     <div class="panel">
@@ -793,6 +828,8 @@ let ocrWorker = null;
 let detailCategoryFilter = null;
 let topItemsExpanded = false;
 let itemsCategoryFilter = null;
+let pricesSortMode = 'freq';
+let pricesCatFilter = null;
 
 // ==============================================================
 // INDEXEDDB  (replaces localStorage — auto-migrates legacy data)
@@ -1334,6 +1371,126 @@ function renderBudgetInputs() {
   }).join('');
 }
 
+// ==============================================================
+// PRICE TRACKER
+// ==============================================================
+function normalizeName(n) {
+  return n.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getRecurringItems() {
+  const map = new Map();
+  for (const r of receipts) {
+    for (const it of r.items) {
+      const key = normalizeName(it.name);
+      if (!map.has(key)) map.set(key, { name: it.name, category: it.category, entries: [] });
+      map.get(key).entries.push({ label: r.label, date: r.date, price: it.price });
+    }
+  }
+  return [...map.values()]
+    .filter(item => item.entries.length >= 2)
+    .map(item => {
+      const sorted = [...item.entries].sort((a, b) => (a.date || 0) - (b.date || 0));
+      const prices = sorted.map(e => e.price);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      const avg = prices.reduce((s, p) => s + p, 0) / prices.length;
+      const trend = prices[0] > 0 ? ((prices[prices.length - 1] - prices[0]) / prices[0] * 100) : 0;
+      const totalSpend = prices.reduce((s, p) => s + p, 0);
+      return { ...item, sorted, prices, min, max, avg, trend, totalSpend };
+    });
+}
+
+function sparklineSVG(prices, trend) {
+  if (prices.length < 2) return '';
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 0.01;
+  const W = 90, H = 32, pad = 4;
+  const color = trend > 2 ? 'var(--red)' : trend < -2 ? 'var(--green)' : 'var(--muted)';
+  const pts = prices.map((v, i) => {
+    const x = pad + (i / (prices.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((v - min) / range) * (H - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const dots = prices.map((v, i) => {
+    const x = pad + (i / (prices.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((v - min) / range) * (H - pad * 2);
+    const isLast = i === prices.length - 1;
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isLast ? 3.2 : 2.2}" fill="${color}" opacity="${isLast ? 1 : .65}"/>`;
+  }).join('');
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/>
+    ${dots}
+  </svg>`;
+}
+
+function renderPricesTab() {
+  const tbody = document.getElementById('prices-tbody');
+  const summary = document.getElementById('prices-summary');
+  if (!tbody) return;
+
+  if (!receipts.length || receipts.length < 2) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Charge au moins 2 tickets pour voir le suivi des prix.</td></tr>`;
+    if (summary) summary.textContent = '';
+    return;
+  }
+
+  const q = normalizeName(document.getElementById('prices-search')?.value || '');
+  let items = getRecurringItems();
+  if (pricesCatFilter) items = items.filter(it => it.category === pricesCatFilter);
+  if (q) items = items.filter(it => normalizeName(it.name).includes(q));
+
+  if (pricesSortMode === 'inflation') items.sort((a, b) => b.trend - a.trend);
+  else if (pricesSortMode === 'spend')  items.sort((a, b) => b.totalSpend - a.totalSpend);
+  else                                   items.sort((a, b) => b.entries.length - a.entries.length);
+
+  // Category chips
+  const all = getRecurringItems();
+  const catCounts = {};
+  for (const it of all) catCounts[it.category] = (catCounts[it.category] || 0) + 1;
+  const cats = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]);
+  document.getElementById('prices-cat-chips').innerHTML =
+    `<div class="filter-chip ${!pricesCatFilter ? 'active' : ''}" onclick="pricesCatFilter=null;renderPricesTab()">Tout</div>` +
+    cats.map(c => `<div class="filter-chip ${pricesCatFilter===c ? 'active' : ''}" onclick="pricesCatFilter='${c}';renderPricesTab()">${CATEGORIES[c]?.icon||''} ${c} <span style="opacity:.5">${catCounts[c]}</span></div>`).join('');
+
+  // Sort chips
+  [['freq','Fréquence'],['inflation','Hausse ↑'],['spend','Dépense totale']].forEach(([k, l]) => {});
+  document.getElementById('prices-sort-chips').innerHTML =
+    [['freq','Fréquence'],['inflation','Hausse ↑'],['spend','Dépense totale']].map(([k, l]) =>
+      `<div class="filter-chip ${pricesSortMode===k?'active':''}" onclick="pricesSortMode='${k}';renderPricesTab()">${l}</div>`
+    ).join('');
+
+  if (summary) summary.textContent = `${items.length} article${items.length !== 1 ? 's' : ''} récurrent${items.length !== 1 ? 's' : ''} sur ${receipts.length} ticket${receipts.length !== 1 ? 's' : ''}`;
+
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Aucun article trouvé dans plusieurs tickets.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(it => {
+    const trendAbs = Math.abs(it.trend);
+    const trendHtml = trendAbs < 0.5
+      ? `<span style="color:var(--dim);font-family:var(--mono);font-size:.78rem">—</span>`
+      : `<span style="font-family:var(--mono);font-size:.78rem;font-weight:700;color:${it.trend > 0 ? 'var(--red)' : 'var(--green)'}">${it.trend > 0 ? '+' : ''}${it.trend.toFixed(1)}%</span>`;
+    const history = it.sorted.map(e => `${e.label}: ${e.price.toFixed(2)}€`).join(' → ');
+    return `<tr title="${history}">
+      <td style="font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.name}</td>
+      <td><div class="cat-cell"><span class="cat-dot" style="background:${CATEGORIES[it.category]?.color||'#666'}"></span>${it.category}</div></td>
+      <td style="text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--green)">${it.min.toFixed(2)}€</td>
+      <td style="text-align:right;font-family:var(--mono);font-size:.82rem">${it.avg.toFixed(2)}€</td>
+      <td style="text-align:right;font-family:var(--mono);font-size:.82rem;color:${it.max > it.min ? 'var(--red)' : 'var(--text)'}">${it.max.toFixed(2)}€</td>
+      <td style="text-align:right">${trendHtml}</td>
+      <td style="padding-top:6px;padding-bottom:6px">${sparklineSVG(it.prices, it.trend)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--muted)">${it.entries.length}×</td>
+    </tr>`;
+  }).join('');
+}
+
 function renderBudgetOverview() {
   const el = document.getElementById('budget-overview');
   if (!el) return;
@@ -1521,6 +1678,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
   document.getElementById('tab-' + tab).classList.remove('hidden');
   if (tab === 'budget') renderBudgetInputs();
+  if (tab === 'prices') renderPricesTab();
   renderAll();
 }
 
@@ -1547,6 +1705,7 @@ function renderAll() {
   renderBarEvolution();
   renderItemsTable();
   renderBudgetOverview();
+  renderPricesTab();
 }
 
 // ==============================================================
