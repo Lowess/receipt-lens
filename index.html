@@ -799,6 +799,7 @@ const CATEGORIES = {
   'Épicerie':         { color:'#a78bfa', icon:'🥫', section:'EPICERIE' },
   'Boissons':         { color:'#2dd4bf', icon:'🥤', section:'LIQUIDE' },
   'Alcool':           { color:'#e11d48', icon:'🍷', keywords:['biere','beer','ipa','blonde','triple','prestige','bush','anosteke','brewdog','feuillien','page 24','hildegarde','tandem','mouillee','mionetto','prosecco','champagne','vin ','wine','cidre','whisky','vodka','rhum','pastis','aperol','ricard'] },
+  'Friandises':       { color:'#f9a8d4', icon:'🍬', keywords:['bonbon','haribo','dragibus','tagada','chamallow','guimauve','marshmallow','caramel','réglisse','reglisse','chupa','tic tac','mentos','kinder','ferrero','nutella','praline','pralinoise','chocolat','tablette choco','barre choco','snickers','twix','kit kat','kitkat','bounty','mars bar','lion bar','m&m','smarties','skittles','carambars','carambar','croqu\'tel','boudoir','speculoos','pim\'s','pims','pepito','prince','granola','lu ','mikado','oreo','chips choco','galette choco','madeleine','cake','financier','biscuit choco','cookie','waffle','gaufre','sucette','lollipop','sherbet','fizz ','sour'] },
   'Hygiène & Maison': { color:'#94a3b8', icon:'🧹', section:'DPH' },
 };
 const CATEGORY_ORDER = Object.keys(CATEGORIES);
@@ -808,6 +809,7 @@ const ALCOHOL_KW = CATEGORIES['Alcool'].keywords;
 function categorize(name, section) {
   const lower = name.toLowerCase();
   for (const kw of CATEGORIES['Bébé'].keywords) { if (lower.includes(kw)) return 'Bébé'; }
+  for (const kw of CATEGORIES['Friandises'].keywords) { if (lower.includes(kw)) return 'Friandises'; }
   for (const kw of ALCOHOL_KW) { if (lower.includes(kw)) return 'Alcool'; }
   for (const [cat, conf] of Object.entries(CATEGORIES)) {
     if (conf.section && conf.section === section) return cat;
@@ -1038,10 +1040,14 @@ function parseReceiptText(text) {
     if (/^[\d\s%]+$/.test(line)) continue;
     if (/^(Réagir|Parlez|anonyme|www\.|03\d{8}|L'échange|tout produit|d'origine|votre E|a l'accueil|Hors produits|sous-v)/i.test(line)) continue;
 
-    // Multiplier line: "2 X 2.78€ 5.56 1" or "2 X 2.78€ 5.56" (trailing digit optional)
-    const multMatch = line.match(/^(\d+)\s*[-—]?\s*X\s*['\d.,]+€?\s+([\d.,@]+)\s*\d?\s*$/i);
+    // Multiplier line: "2 X 1.30€ 2.60 1" — captures qty, unit price, total price
+    const multMatch = line.match(/^(\d+)\s*[-—]?\s*X\s*(['\d.,@]+)€?\s+([\d.,@]+)\s*\d?\s*$/i);
     if (multMatch) {
-      const price = cleanPrice(multMatch[2]);
+      const qty = parseInt(multMatch[1], 10) || 1;
+      const unitPrice = cleanPrice(multMatch[2]);
+      const totalPrice = cleanPrice(multMatch[3]);
+      const resolvedUnit = unitPrice > 0 ? unitPrice : (totalPrice / qty);
+      const price = totalPrice > 0 ? totalPrice : resolvedUnit * qty;
       if (price > 0 && i > 0) {
         for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
           const prev = lines[j].trim();
@@ -1053,7 +1059,7 @@ function parseReceiptText(text) {
             const key = nameOnly.substring(0, 20) + '|' + price;
             if (!seen.has(key)) {
               seen.add(key);
-              items.push({ name: nameOnly, price, section: currentSection, category: categorize(nameOnly, currentSection) });
+              items.push({ name: nameOnly, price, unitPrice: resolvedUnit, qty, section: currentSection, category: categorize(nameOnly, currentSection) });
             }
             break;
           }
@@ -1078,7 +1084,7 @@ function parseReceiptText(text) {
         const key = name.substring(0, 20) + '|' + price;
         if (!seen.has(key)) {
           seen.add(key);
-          items.push({ name, price, section: currentSection, category: categorize(name, currentSection) });
+          items.push({ name, price, unitPrice: price, qty: 1, section: currentSection, category: categorize(name, currentSection) });
         }
       }
     }
@@ -1388,7 +1394,7 @@ function getRecurringItems() {
     for (const it of r.items) {
       const key = normalizeName(it.name);
       if (!map.has(key)) map.set(key, { name: it.name, category: it.category, entries: [] });
-      map.get(key).entries.push({ label: r.label, date: r.date, price: it.price });
+      map.get(key).entries.push({ label: r.label, date: r.date, price: it.unitPrice ?? it.price });
     }
   }
   return [...map.values()]
