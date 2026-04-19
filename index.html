@@ -708,6 +708,81 @@ body {
 @media(max-width: 560px) {
   #stat-cards > div { grid-template-columns: 1fr !important; }
 }
+
+/* ── MONTH ACCORDION ─────────────────────────────── */
+.month-group { margin-bottom: 6px; }
+.month-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; cursor: pointer;
+  background: var(--paper-2); border: 1px solid var(--hairline);
+  border-radius: var(--radius); transition: background .14s;
+}
+.month-header:hover { background: var(--paper-3); }
+.month-header.open { border-radius: var(--radius) var(--radius) 0 0; }
+.month-title { font-family: var(--font-display); font-style: italic; font-size: .97rem; color: var(--ink); }
+.month-meta { font-size: .76rem; color: var(--ink-4); font-family: var(--font-mono); }
+.month-chevron { margin-left: auto; color: var(--ink-4); font-size: .75rem; transition: transform .2s; display: inline-block; }
+.month-header.open .month-chevron { transform: rotate(180deg); }
+.month-body { display: none; border: 1px solid var(--hairline); border-top: none; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
+.month-body.open { display: block; }
+.receipt-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; border-bottom: 1px solid var(--hairline);
+  cursor: pointer; transition: background .12s;
+}
+.receipt-row:last-child { border-bottom: none; }
+.receipt-row:hover { background: var(--paper-2); }
+.receipt-row.active { background: var(--accent-soft); }
+.receipt-row-date { font-family: var(--font-mono); font-size: .76rem; color: var(--ink-4); width: 52px; flex-shrink: 0; }
+.receipt-row-name { flex: 1; font-size: .85rem; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.receipt-row-items { font-size: .73rem; color: var(--ink-4); flex-shrink: 0; }
+.receipt-row-total { font-family: var(--font-mono); font-size: .86rem; color: var(--ink); flex-shrink: 0; }
+
+/* ── SEARCH / SORT BAR ───────────────────────────── */
+.search-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.search-input { flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--hairline-2); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: .875rem; transition: border-color .15s; }
+.search-input:focus { outline: none; border-color: var(--accent); }
+.sort-select { padding: 8px 10px; border: 1px solid var(--hairline-2); border-radius: var(--radius); background: var(--paper); color: var(--ink-2); font-family: var(--font-ui); font-size: .82rem; cursor: pointer; }
+
+/* ── BADGE NOUVEAU BAS PRIX ──────────────────────── */
+.badge-lowprice { display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 3px; background: var(--green-soft); color: var(--positive); font-size: .67rem; font-weight: 500; vertical-align: middle; }
+
+/* ── MODAL OVERLAY ───────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-box { background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--radius-lg); width: 100%; max-width: 640px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 17px 22px; border-bottom: 1px solid var(--hairline); flex-shrink: 0; }
+.modal-title { font-family: var(--font-display); font-size: 1.1rem; font-style: italic; color: var(--ink); }
+.modal-close { background: none; border: none; font-size: 1.2rem; color: var(--ink-4); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.modal-close:hover { background: var(--paper-3); color: var(--ink); }
+.modal-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+.modal-footer { padding: 14px 22px; border-top: 1px solid var(--hairline); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
+.form-section { margin-bottom: 20px; }
+.form-section-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-4); margin-bottom: 10px; }
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 130px; margin-bottom: 10px; }
+.form-label { font-size: .72rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-4); }
+.form-input, .form-select { padding: 8px 11px; border: 1px solid var(--hairline-2); border-radius: var(--radius); background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: .875rem; width: 100%; }
+.form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); }
+.manual-items-wrap { border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden; }
+.manual-items-header { display: grid; grid-template-columns: 1fr 50px 80px 130px 24px; gap: 6px; padding: 6px 10px; background: var(--paper-2); border-bottom: 1px solid var(--hairline); font-size: .67rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-4); }
+.manual-item-row { display: grid; grid-template-columns: 1fr 50px 80px 130px 24px; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--hairline); align-items: center; }
+.manual-item-row:last-child { border-bottom: none; }
+.manual-item-row input, .manual-item-row select { width: 100%; padding: 5px 7px; border: 1px solid var(--hairline-2); border-radius: 4px; background: var(--paper); color: var(--ink); font-size: .82rem; font-family: var(--font-ui); }
+.manual-item-row input:focus, .manual-item-row select:focus { outline: none; border-color: var(--accent); }
+.del-row-btn { background: none; border: none; color: var(--ink-4); cursor: pointer; font-size: .9rem; padding: 2px; border-radius: 3px; }
+.del-row-btn:hover { color: var(--danger); background: var(--red-soft); }
+.add-item-btn { width: 100%; padding: 9px; background: none; border: 1px dashed var(--hairline-2); border-radius: var(--radius); color: var(--ink-4); cursor: pointer; font-size: .82rem; font-family: var(--font-ui); transition: all .14s; }
+.add-item-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── PRINT ───────────────────────────────────────── */
+@media print {
+  .sidebar, .page-header button, .upload-zone, .ocr-progress, .expand-btn, .filter-chips, .receipt-pills { display: none !important; }
+  .shell { display: block; }
+  .main { padding: 0; }
+  .tab-content { display: block !important; }
+  .panel { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+  body { background: white; color: black; }
+}
 </style>
 </head>
 <body>
@@ -780,12 +855,24 @@ body {
 
   <!-- DETAIL / REÇUS -->
   <div id="tab-detail" class="tab-content hidden fade-in">
-    <div class="page-header"><h1 class="page-title">Reçus</h1></div>
-    <div class="panel">
-      <div class="panel-title">Sélectionner un reçu</div>
-      <div class="receipt-pills" id="receipt-pills-detail"></div>
+    <div class="page-header">
+      <h1 class="page-title">Reçus</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="exportPDF()">Export PDF</button>
+        <button class="btn btn-primary" onclick="showManualEntryModal()">+ Saisie manuelle</button>
+      </div>
     </div>
-    <div class="grid-2" style="margin-top:20px">
+    <div class="search-bar">
+      <input class="search-input" id="detail-search" placeholder="Chercher un article ou un fichier…" oninput="renderDetailRecusList()">
+      <select class="sort-select" id="detail-sort" onchange="renderDetailRecusList()">
+        <option value="date-desc">Date récente</option>
+        <option value="date-asc">Date ancienne</option>
+        <option value="total-desc">Montant ↓</option>
+        <option value="total-asc">Montant ↑</option>
+      </select>
+    </div>
+    <div id="detail-months-list"></div>
+    <div class="grid-2" style="margin-top:16px">
       <div class="panel">
         <div class="panel-title">Répartition du reçu</div>
         <div class="chart-wrap"><canvas id="donut-detail"></canvas>
@@ -799,7 +886,7 @@ body {
         <div class="items-scroll" id="top-items-scroll">
           <div class="trend-chart-wrap"><canvas id="bar-top-items"></canvas></div>
         </div>
-        <button class="expand-btn" id="expand-top-items" onclick="toggleExpandTopItems()">Show all items ▼</button>
+        <button class="expand-btn" id="expand-top-items" onclick="toggleExpandTopItems()">Voir tous les articles ▼</button>
       </div>
     </div>
   </div>
@@ -893,6 +980,46 @@ body {
   </main>
 </div>
 
+<!-- MODAL SAISIE MANUELLE -->
+<div class="modal-overlay hidden" id="manual-modal" onclick="if(event.target===this)closeManualModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Saisie manuelle d'un reçu</span>
+      <button class="modal-close" onclick="closeManualModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-title">Informations générales</div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="manual-date">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Étiquette (magasin, lieu…)</label>
+            <input class="form-input" type="text" id="manual-label" placeholder="ex : Leclerc Amiens">
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Articles</div>
+        <div class="manual-items-wrap">
+          <div class="manual-items-header">
+            <span>Nom</span><span>Qté</span><span>Prix unit.</span><span>Catégorie</span><span></span>
+          </div>
+          <div id="manual-items-body"></div>
+        </div>
+        <button class="add-item-btn" style="margin-top:8px" onclick="addManualItem()">+ Ajouter un article</button>
+      </div>
+      <div id="manual-total-preview" style="text-align:right;font-family:var(--font-mono);font-size:1rem;color:var(--ink);margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeManualModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveManualReceipt()">Enregistrer le reçu</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ==============================================================
 // CATEGORIES
@@ -941,6 +1068,10 @@ let topItemsExpanded = false;
 let itemsCategoryFilter = null;
 let pricesSortMode = 'freq';
 let pricesCatFilter = null;
+let detailMonthsOpen = new Set();
+
+const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MONTH_SHORT  = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 
 // ==============================================================
 // INDEXEDDB  (replaces localStorage — auto-migrates legacy data)
@@ -1592,9 +1723,12 @@ function renderPricesTab() {
     const trendHtml = trendAbs < 0.5
       ? `<span style="color:var(--dim);font-family:var(--mono);font-size:.78rem">—</span>`
       : `<span style="font-family:var(--mono);font-size:.78rem;font-weight:700;color:${it.trend > 0 ? 'var(--red)' : 'var(--green)'}">${it.trend > 0 ? '+' : ''}${it.trend.toFixed(1)}%</span>`;
+    const lastPrice = it.sorted[it.sorted.length - 1].price;
+    const isNewLow = lastPrice === it.min && it.entries.length > 1 && it.max > it.min;
+    const lowBadge = isNewLow ? `<span class="badge-lowprice">↓ bas historique</span>` : '';
     const history = it.sorted.map(e => `${e.label}: ${e.price.toFixed(2)}€`).join(' → ');
-    return `<tr title="${history}">
-      <td style="font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.name}</td>
+    return `<tr title="${history}" style="cursor:pointer" onclick="togglePriceHistory(this, ${JSON.stringify(it.prices)}, ${JSON.stringify(it.sorted.map(e=>e.label))})">
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.name} ${lowBadge}</td>
       <td><div class="cat-cell"><span class="cat-dot" style="background:${CATEGORIES[it.category]?.color||'#666'}"></span>${it.category}</div></td>
       <td style="text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--green)">${it.min.toFixed(2)}€</td>
       <td style="text-align:right;font-family:var(--mono);font-size:.82rem">${it.avg.toFixed(2)}€</td>
@@ -1602,8 +1736,32 @@ function renderPricesTab() {
       <td style="text-align:right">${trendHtml}</td>
       <td style="padding-top:6px;padding-bottom:6px">${sparklineSVG(it.prices, it.trend)}</td>
       <td style="text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--muted)">${it.entries.length}×</td>
+    </tr>
+    <tr class="price-history-row hidden" id="ph-${it.name.replace(/[^a-z0-9]/gi,'_')}">
+      <td colspan="8" style="padding:0 14px 12px">
+        <div style="height:140px;position:relative"><canvas id="phc-${it.name.replace(/[^a-z0-9]/gi,'_')}"></canvas></div>
+      </td>
     </tr>`;
   }).join('');
+}
+
+function togglePriceHistory(tr, prices, labels) {
+  const safeId = tr.querySelector('td').textContent.trim().replace(/[^a-z0-9]/gi, '_').substring(0, 40);
+  const key = tr.nextElementSibling?.id;
+  if (!key) return;
+  const histRow = tr.nextElementSibling;
+  const isHidden = histRow.classList.toggle('hidden');
+  if (!isHidden) {
+    const canvasId = 'phc-' + key.replace('ph-', '');
+    const canvas = document.getElementById(canvasId);
+    if (canvas && !charts[canvasId]) {
+      charts[canvasId] = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets: [{ data: prices, borderColor: 'var(--accent)', backgroundColor: 'oklch(92% 0.025 40)', fill: true, tension: 0.3, pointRadius: 5, pointHoverRadius: 7, borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ...CHART_TOOLTIP, callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} €` } } }, scales: { x: { grid: { display: false }, ticks: { color: '#8a7e72', font: { size: 10 } } }, y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#8a7e72', callback: v => v + '€' } } } }
+      });
+    }
+  }
 }
 
 function renderBudgetOverview() {
@@ -1695,18 +1853,45 @@ function renderStatCards() {
     return r.label + ': ' + a.toFixed(2) + '€';
   }).join(' · ');
 
-  const modeLabel = isFoodOnly() ? ' (Food Only)' : '';
+  // Month comparison
+  const latestDate = receipts[receipts.length - 1].date;
+  let monthCompareHtml = '';
+  if (latestDate) {
+    const curMK = `${latestDate.getFullYear()}-${latestDate.getMonth()}`;
+    const prevM = latestDate.getMonth() === 0 ? 11 : latestDate.getMonth() - 1;
+    const prevY = latestDate.getMonth() === 0 ? latestDate.getFullYear() - 1 : latestDate.getFullYear();
+    const prevMK = `${prevY}-${prevM}`;
+    const curItems  = receipts.filter(r => r.date && `${r.date.getFullYear()}-${r.date.getMonth()}` === curMK).flatMap(r => getFilteredItems(r.items));
+    const prevItems = receipts.filter(r => r.date && `${r.date.getFullYear()}-${r.date.getMonth()}` === prevMK).flatMap(r => getFilteredItems(r.items));
+    const curT  = curItems.reduce((s, it) => s + it.price, 0);
+    const prevT = prevItems.reduce((s, it) => s + it.price, 0);
+    if (prevT > 0) {
+      const d = curT - prevT;
+      const p = ((d / prevT) * 100).toFixed(1);
+      monthCompareHtml = `<span class="stat-badge ${d > 0 ? 'badge-up' : 'badge-down'}">${d > 0 ? '+' : ''}${p}% vs mois préc.</span>`;
+    }
+  }
+
+  // Budget alert
+  let budgetAlertHtml = '';
+  if (Object.keys(budgets).length && receipts.length) {
+    const last = receipts[receipts.length - 1];
+    const totals = getCategoryTotals(last.items);
+    const overCats = CATEGORY_ORDER.filter(c => budgets[c] > 0 && totals[c] > budgets[c]);
+    if (overCats.length) budgetAlertHtml = `<span class="stat-badge badge-up">⚠ ${overCats.length} budget${overCats.length > 1 ? 's' : ''} dépassé${overCats.length > 1 ? 's' : ''}</span>`;
+  }
+
+  const modeLabel = isFoodOnly() ? ' · alim.' : '';
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px">
-      <div class="stat-card"><div class="stat-label">Total Spent${modeLabel}</div><div class="stat-value">${totalSpent.toFixed(2)}€</div><div class="stat-sub">${receipts.length} receipt(s) ${changeHtml}</div></div>
-      <div class="stat-card"><div class="stat-label">Average per Receipt</div><div class="stat-value">${avg.toFixed(2)}€</div><div class="stat-sub">${totalItemCount} items total</div></div>
-      <div class="stat-card"><div class="stat-label">Latest Receipt</div><div class="stat-value">${receipts[receipts.length-1].total.toFixed(2)}€</div><div class="stat-sub">${receipts[receipts.length-1].label}${receipts[receipts.length-1].discount > 0 ? ` <span class="stat-badge badge-down">-${receipts[receipts.length-1].discount.toFixed(2)}€ remise</span>` : ''}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--hairline);border-radius:var(--radius-lg);overflow:hidden">
+      <div class="stat-card"><div class="stat-label">Total dépensé${modeLabel}</div><div class="stat-value">${totalSpent.toFixed(2)}€</div><div class="stat-sub">${receipts.length} reçu${receipts.length>1?'s':''} ${monthCompareHtml}</div></div>
+      <div class="stat-card"><div class="stat-label">Moyenne par reçu</div><div class="stat-value">${avg.toFixed(2)}€</div><div class="stat-sub">${totalItemCount} articles ${changeHtml}</div></div>
+      <div class="stat-card"><div class="stat-label">Dernier reçu</div><div class="stat-value">${receipts[receipts.length-1].total.toFixed(2)}€</div><div class="stat-sub">${receipts[receipts.length-1].label}${receipts[receipts.length-1].discount > 0 ? ` <span class="stat-badge badge-down">-${receipts[receipts.length-1].discount.toFixed(2)}€</span>` : ''} ${budgetAlertHtml}</div></div>
       <div class="alcohol-card">
-        <div class="stat-label">🍷 Alcohol Spend</div>
+        <div class="stat-label">🍷 Alcool</div>
         <div class="stat-value alcohol-highlight">${totalAlcohol.toFixed(2)}€</div>
-        <div class="stat-sub">${pctOfTotal}% of total · ${allAlcohol.length} items ${alcTrendHtml}</div>
-        ${topAlcohol.length ? `<div style="margin-top:8px;font-size:.75rem;color:var(--dim)">${topAlcohol.map(it=>`<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${it.name.substring(0,22)}</span><span style="color:var(--orange);font-weight:600">${it.price.toFixed(2)}€</span></div>`).join('')}</div>` : ''}
-        <div style="margin-top:6px;font-size:.68rem;color:var(--dim);opacity:.5">${perReceiptAlc}</div>
+        <div class="stat-sub">${pctOfTotal}% du total · ${allAlcohol.length} articles ${alcTrendHtml}</div>
+        ${topAlcohol.length ? `<div style="margin-top:8px;font-size:.73rem;color:var(--ink-4)">${topAlcohol.map(it=>`<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${it.name.substring(0,22)}</span><span style="color:var(--warn)">${it.price.toFixed(2)}€</span></div>`).join('')}</div>` : ''}
       </div>
     </div>`;
 }
@@ -1788,6 +1973,178 @@ function renderItemsTable() {
   ).join('');
 }
 
+// ==============================================================
+// DETAIL — ACCORDÉON MENSUEL
+// ==============================================================
+function renderDetailRecusList() {
+  const el = document.getElementById('detail-months-list');
+  if (!el) return;
+  if (!receipts.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--ink-4);padding:40px;font-size:.9rem">Aucun reçu chargé — déposez un ticket ou utilisez la saisie manuelle.</div>';
+    return;
+  }
+  const q = (document.getElementById('detail-search')?.value || '').toLowerCase().trim();
+  const sortMode = document.getElementById('detail-sort')?.value || 'date-desc';
+
+  let rs = receipts.map((r, i) => ({ ...r, _idx: i }));
+  if (q) rs = rs.filter(r =>
+    (r.label || '').toLowerCase().includes(q) ||
+    (r.filename || '').toLowerCase().includes(q) ||
+    r.items.some(it => it.name.toLowerCase().includes(q))
+  );
+  if (sortMode === 'date-asc')   rs.sort((a, b) => (a.date||0) - (b.date||0));
+  else if (sortMode === 'total-desc') rs.sort((a, b) => b.total - a.total);
+  else if (sortMode === 'total-asc')  rs.sort((a, b) => a.total - b.total);
+  else rs.sort((a, b) => (b.date||0) - (a.date||0));
+
+  const byMonth = new Map();
+  for (const r of rs) {
+    const key = r.date ? `${r.date.getFullYear()}-${String(r.date.getMonth()+1).padStart(2,'0')}` : '????';
+    const lbl = r.date ? MONTH_NAMES[r.date.getMonth()] + ' ' + r.date.getFullYear() : 'Date inconnue';
+    if (!byMonth.has(key)) byMonth.set(key, { label: lbl, key, rs: [] });
+    byMonth.get(key).rs.push(r);
+  }
+
+  if (detailMonthsOpen.size === 0 && byMonth.size > 0) detailMonthsOpen.add([...byMonth.keys()][0]);
+
+  el.innerHTML = [...byMonth.values()].map(({ label, key, rs: mrs }) => {
+    const monthTotal = mrs.reduce((s, r) => s + r.total, 0);
+    const isOpen = q || detailMonthsOpen.has(key);
+    return `<div class="month-group">
+      <div class="month-header${isOpen ? ' open' : ''}" onclick="toggleMonth('${key}')">
+        <span class="month-title">${label}</span>
+        <span class="month-meta">${mrs.length} reçu${mrs.length>1?'s':''} · ${monthTotal.toFixed(2)} €</span>
+        <span class="month-chevron">▾</span>
+      </div>
+      <div class="month-body${isOpen ? ' open' : ''}">
+        ${mrs.map(r => {
+          const d = r.date;
+          const dateStr = d ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_SHORT[d.getMonth()]}` : '?';
+          const name = (r.filename ? r.filename.replace(/\.[^.]+$/,'') : r.label).substring(0, 36);
+          return `<div class="receipt-row${r._idx===selectedReceiptIdx?' active':''}" onclick="selectReceipt(${r._idx})">
+            <span class="receipt-row-date">${dateStr}</span>
+            <span class="receipt-row-name">${name}</span>
+            <span class="receipt-row-items">${r.items.length} art.</span>
+            <span class="receipt-row-total">${r.total.toFixed(2)} €</span>
+            <button class="receipt-delete" onclick="event.stopPropagation();deleteReceipt(${r._idx})" title="Supprimer">×</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMonth(key) {
+  if (detailMonthsOpen.has(key)) detailMonthsOpen.delete(key);
+  else detailMonthsOpen.add(key);
+  renderDetailRecusList();
+}
+
+function selectReceipt(idx) {
+  selectedReceiptIdx = idx;
+  renderDetailRecusList();
+  renderPills('receipt-pills-items');
+  if (!receipts.length) return;
+  const r = receipts[idx];
+  const ct = getCategoryTotals(r.items);
+  renderDonut('donut-detail', ct, 'detail-amount');
+  document.getElementById('detail-sublabel').textContent = r.label;
+  renderLegend('legend-detail', ct);
+  detailCategoryFilter = null;
+  renderDetailCategoryChips(r);
+  renderBarTopItems(r);
+}
+
+function deleteReceipt(idx) {
+  receipts.splice(idx, 1);
+  if (selectedReceiptIdx >= receipts.length) selectedReceiptIdx = Math.max(0, receipts.length - 1);
+  saveState();
+  renderAll();
+}
+
+// ==============================================================
+// EXPORT PDF
+// ==============================================================
+function exportPDF() { window.print(); }
+
+// ==============================================================
+// SAISIE MANUELLE
+// ==============================================================
+let manualItemCount = 0;
+
+function showManualEntryModal() {
+  manualItemCount = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('manual-date').value = today;
+  document.getElementById('manual-label').value = '';
+  document.getElementById('manual-items-body').innerHTML = '';
+  document.getElementById('manual-total-preview').textContent = '';
+  addManualItem();
+  document.getElementById('manual-modal').classList.remove('hidden');
+}
+
+function closeManualModal() {
+  document.getElementById('manual-modal').classList.add('hidden');
+}
+
+function catOptions(selected) {
+  return CATEGORY_ORDER.map(c => `<option value="${c}"${c===selected?' selected':''}>${CATEGORIES[c].icon} ${c}</option>`).join('');
+}
+
+function addManualItem() {
+  const id = manualItemCount++;
+  const row = document.createElement('div');
+  row.className = 'manual-item-row';
+  row.id = `manual-row-${id}`;
+  row.innerHTML = `
+    <input type="text" placeholder="Nom de l'article" oninput="updateManualTotal()">
+    <input type="number" value="1" min="1" step="1" oninput="updateManualTotal()">
+    <input type="number" placeholder="0.00" min="0" step="0.01" oninput="updateManualTotal()">
+    <select>${catOptions('Épicerie')}</select>
+    <button class="del-row-btn" onclick="document.getElementById('manual-row-${id}').remove();updateManualTotal()" title="Supprimer">×</button>`;
+  document.getElementById('manual-items-body').appendChild(row);
+}
+
+function updateManualTotal() {
+  const rows = document.querySelectorAll('.manual-item-row');
+  let total = 0;
+  for (const row of rows) {
+    const qty = parseFloat(row.querySelectorAll('input')[1].value) || 1;
+    const price = parseFloat(row.querySelectorAll('input')[2].value) || 0;
+    total += qty * price;
+  }
+  document.getElementById('manual-total-preview').textContent = total > 0 ? `Total : ${total.toFixed(2)} €` : '';
+}
+
+async function saveManualReceipt() {
+  const dateVal = document.getElementById('manual-date').value;
+  const labelVal = document.getElementById('manual-label').value.trim();
+  const date = dateVal ? new Date(dateVal) : new Date();
+  const mNames = MONTH_SHORT;
+  const dateLabel = `${String(date.getDate()).padStart(2,'0')} ${mNames[date.getMonth()]} ${date.getFullYear()}`;
+
+  const rows = document.querySelectorAll('.manual-item-row');
+  const items = [];
+  for (const row of rows) {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    const qty = parseInt(inputs[1].value) || 1;
+    const unitPrice = parseFloat(inputs[2].value) || 0;
+    const category = row.querySelector('select').value;
+    if (!name || unitPrice <= 0) continue;
+    items.push({ name, price: qty * unitPrice, unitPrice, qty, section: 'MANUEL', category });
+  }
+  if (!items.length) { alert('Ajoutez au moins un article valide.'); return; }
+
+  const total = items.reduce((s, it) => s + it.price, 0);
+  const receipt = { date, dateLabel, label: dateLabel, total, subtotal: total, discount: 0, items, filename: labelVal || 'Saisie manuelle' };
+  receipts.push(receipt);
+  receipts.sort((a, b) => (a.date || 0) - (b.date || 0));
+  await saveState();
+  closeManualModal();
+  renderAll();
+}
+
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
@@ -1804,7 +2161,7 @@ function renderAll() {
   renderDonut('donut-total', totals, 'total-amount');
   renderLegend('legend-total', totals);
   renderBarStacked();
-  renderPills('receipt-pills-detail');
+  renderDetailRecusList();
   renderPills('receipt-pills-items');
   if (receipts.length) {
     const r = receipts[selectedReceiptIdx];
