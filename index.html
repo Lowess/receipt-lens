@@ -2011,7 +2011,7 @@ function renderDetailRecusList() {
     const monthTotal = mrs.reduce((s, r) => s + r.total, 0);
     const isOpen = q || detailMonthsOpen.has(key);
     return `<div class="month-group">
-      <div class="month-header${isOpen ? ' open' : ''}" onclick="toggleMonth('${key}')">
+      <div class="month-header${isOpen ? ' open' : ''}" data-month-key="${key}" onclick="toggleMonth(this)">
         <span class="month-title">${label}</span>
         <span class="month-meta">${mrs.length} reçu${mrs.length>1?'s':''} · ${monthTotal.toFixed(2)} €</span>
         <span class="month-chevron">▾</span>
@@ -2034,10 +2034,14 @@ function renderDetailRecusList() {
   }).join('');
 }
 
-function toggleMonth(key) {
-  if (detailMonthsOpen.has(key)) detailMonthsOpen.delete(key);
-  else detailMonthsOpen.add(key);
-  renderDetailRecusList();
+function toggleMonth(header) {
+  const key = header.dataset.monthKey;
+  const body = header.nextElementSibling;
+  const willOpen = !header.classList.contains('open');
+  header.classList.toggle('open', willOpen);
+  if (body) body.classList.toggle('open', willOpen);
+  if (willOpen) detailMonthsOpen.add(key);
+  else detailMonthsOpen.delete(key);
 }
 
 function selectReceipt(idx) {
