@@ -1,4 +1,4 @@
-# 🧾 ReceiptLens
+# 🧾 Caisse Claire
 
 A visual grocery receipt analyser that runs entirely in your browser. Drop a scanned PDF from **E.Leclerc** and instantly see where your money goes — no server, no upload, no account.
 
